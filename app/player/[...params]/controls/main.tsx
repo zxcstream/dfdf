@@ -53,6 +53,7 @@ export interface VideoControlsProps {
   source: QualityTrack[];
   //
   color: string;
+  back: boolean;
 }
 export default function MainControls({
   state,
@@ -87,6 +88,7 @@ export default function MainControls({
   //
   source,
   color,
+  back,
 }: VideoControlsProps) {
   const router = useRouter();
   const sliderRef = useRef<HTMLDivElement>(null);
@@ -118,10 +120,11 @@ export default function MainControls({
       onPointerMove={lockTimer}
     >
       <div className="lg:px-6 px-2 py-3 flex justify-between items-center pointer-events-auto">
-        <button onClick={() => router.back()} className="cursor-pointer">
-          <ArrowLeftIcon className="lg:size-13 md:size-10 size-8 text-muted-foreground" />
-        </button>
-
+        {back && (
+          <button onClick={() => router.back()} className="cursor-pointer">
+            <ArrowLeftIcon className="lg:size-13 md:size-10 size-8  max-[340px]:size-5.5 text-muted-foreground" />
+          </button>
+        )}
         {/* <div className="text-center absolute -translate-x-1/2 left-1/2 lg:top-5 top-3">
           <h1 className="lg:text-2xl md:text-xl font-semibold">{title}</h1>
           <div className="flex gap-3 justify-center  text-muted-foreground lg:mt-1 font-medium lg:text-base text-sm">
@@ -130,26 +133,26 @@ export default function MainControls({
         </div> */}
         <div></div>
       </div>
-      <div className="w-full lg:px-6 px-2 lg:py-6 py-3  space-y-3">
+      <div className="w-full lg:px-6 px-2   max-[340px]:px-1  lg:py-6 py-3  max-[340px]:py-1.5  space-y-3  max-[340px]:space-y-1  max-[340px]:-translate-x-2">
         <div className="lg:p-4 p-2  pointer-events-none">
-          <span className="flex lg:gap-3 gap-1.5 items-center">
+          <span className="flex lg:gap-3 gap-1.5  max-[340px]:gap-1 items-center">
             <div
-              className="lg:w-1 w-0.5  lg:h-5 h-3 rounded-full"
+              className="lg:w-1 w-0.5  lg:h-5 h-3  max-[340px]:h-2 rounded-full"
               style={{ backgroundColor: `#${color}` }}
             ></div>
-            <p className="lg:text-base text-sm tracking-wide text-muted-foreground">
+            <p className="lg:text-base text-sm  max-[340px]:text-[0.6rem] tracking-wide text-muted-foreground">
               Your'e Watching
             </p>
           </span>
-          <h1 className="lg:text-4xl text-xl font-semibold lg:mt-2 mt-1">
+          <h1 className="lg:text-4xl text-xl  max-[340px]:text-sm font-semibold lg:mt-2 mt-1  max-[340px]:mt-0.5">
             {title}
           </h1>
-          <div className="flex gap-3  text-muted-foreground lg:mt-3 mt-1.5 font-medium lg:text-base text-sm">
+          <div className="flex gap-3  max-[340px]:gap-1.5  text-muted-foreground lg:mt-3 mt-1.5  max-[340px]:mt-0.5 font-medium lg:text-base text-sm  max-[340px]:text-[0.6rem]">
             <p>2024</p> |<p>Animation</p>|<p>PG</p>
           </div>
         </div>
-        <div className="space-y-3 pointer-events-auto ">
-          <div className="group  lg:h-4 h-2  lg:px-3 px-2 flex justify-center items-center ">
+        <div className="space-y-3  max-[340px]:space-y-1 pointer-events-auto ">
+          <div className="group  lg:h-4 h-2  max-[340px]:h-1 lg:px-3 px-2 flex justify-center items-center ">
             <div
               className="relative w-full"
               ref={sliderRef}
@@ -191,8 +194,8 @@ export default function MainControls({
               />
             </div>
           </div>
-          <div className="flex justify-between items-center w-full">
-            <div className="flex items-center lg:gap-3 gap-2">
+          <div className="flex justify-between items-center w-full  max-[340px]:px-1">
+            <div className="flex items-center lg:gap-3 gap-2  max-[340px]:gap-1.5">
               <button
                 onClick={controls.togglePlay}
                 // disabled={!state.canPlay}
@@ -206,7 +209,7 @@ export default function MainControls({
                     exit={{ opacity: 0, scale: 1.5 }}
                     transition={{ duration: 0.1 }}
                   >
-                    <PauseIcon className="lg:size-13 md:size-10 size-8 " />
+                    <PauseIcon className="lg:size-13 md:size-10 size-8  max-[340px]:size-5.5 " />
                   </motion.div>
                 ) : (
                   <motion.div
@@ -216,7 +219,7 @@ export default function MainControls({
                     exit={{ opacity: 0, scale: 1.5 }}
                     transition={{ duration: 0.1 }}
                   >
-                    <PlayIcon className=" lg:size-13 md:size-10 size-8" />
+                    <PlayIcon className=" lg:size-13 md:size-10 size-8  max-[340px]:size-5.5" />
                   </motion.div>
                 )}
               </button>
@@ -227,9 +230,9 @@ export default function MainControls({
                   className="text-white/80 hover:text-white cursor-pointer"
                 >
                   {state.muted || state.volume === 0 ? (
-                    <VolumeOffIcon className="lg:size-13 md:size-10 size-8" />
+                    <VolumeOffIcon className="lg:size-13 md:size-10 size-8  max-[340px]:size-5.5" />
                   ) : (
-                    <VolumeOnIcon className="lg:size-13 md:size-10 size-8" />
+                    <VolumeOnIcon className="lg:size-13 md:size-10 size-8  max-[340px]:size-5.5" />
                   )}
                 </button>
                 <Slider
@@ -242,13 +245,13 @@ export default function MainControls({
                   color={color}
                 />
               </div>
-              <div className="flex lg:gap-2 gap-1 items-center lg:ml-2 lg:text-base text-sm">
+              <div className="flex lg:gap-2 gap-1 items-center lg:ml-2 lg:text-base text-sm  max-[340px]:text-xs">
                 <span>{formatTime(state.currentTime)}</span>/
                 <span>{formatTime(state.duration)}</span>
               </div>
             </div>
 
-            <div className="flex items-center lg:gap-3 gap-2">
+            <div className="flex items-center lg:gap-3 gap-2  max-[340px]:gap-1.5">
               <Settings
                 mergeSubtitles={mergeSubtitles}
                 quality={quality}
@@ -280,9 +283,9 @@ export default function MainControls({
                 onClick={() => setCcToggle((prev) => !prev)}
               >
                 {cCToggle ? (
-                  <CcOnIcon className="lg:size-13 md:size-10 size-8" />
+                  <CcOnIcon className="lg:size-13 md:size-10 size-8  max-[340px]:size-5.5" />
                 ) : (
-                  <CcOffIcon className="lg:size-13 md:size-10 size-8" />
+                  <CcOffIcon className="lg:size-13 md:size-10 size-8  max-[340px]:size-5.5" />
                 )}
               </button>
               {/* <button className="text-white/80 hover:text-white cursor-pointer">
@@ -293,9 +296,9 @@ export default function MainControls({
                 className="cursor-pointer text-white/80 hover:text-white"
               >
                 {state.fullscreen ? (
-                  <MinimizeIcon className="lg:size-13 md:size-10 size-8" />
+                  <MinimizeIcon className="lg:size-13 md:size-10 size-8  max-[340px]:size-5.5" />
                 ) : (
-                  <MaximizeIcon className="lg:size-13 md:size-10 size-8" />
+                  <MaximizeIcon className="lg:size-13 md:size-10 size-8  max-[340px]:size-5.5" />
                 )}
               </button>
             </div>

@@ -147,9 +147,13 @@ export function LyricsServerPicker({
             <SwiperSlide
               key={s.server}
               className={cn(
-                "h-auto!  transition-all! duration-200 pointer-events-auto  group cursor-pointer text-end select-none lg:py-10 md:py-8 py-5 lg:px-8 px-2  w-fit! ml-auto",
-                isActive ? "lg:-translate-x-15 -translate-x-8" : "",
-                isNear ? "lg:-translate-x-8 -translate-x-4 opacity-50" : "",
+                "h-auto!  transition-all! duration-200 pointer-events-auto  group cursor-pointer text-end select-none lg:py-10 md:py-8 py-5 max-[340px]:py-3 lg:px-8 px-2  w-fit! ml-auto",
+                isActive
+                  ? "lg:-translate-x-15 -translate-x-8  max-[340px]:-translate-x-4"
+                  : "",
+                isNear
+                  ? "lg:-translate-x-8 -translate-x-4  max-[340px]:-translate-x-2 opacity-50"
+                  : "",
                 !isActive && !isNear
                   ? "lg:opacity-30 opacity-10 pointer-events-none"
                   : "",
@@ -161,24 +165,26 @@ export function LyricsServerPicker({
                 className={[
                   "transition-all duration-400 font-semibold",
                   isActive
-                    ? "lg:text-3xl md:text-2xl text-lg text-foreground"
+                    ? "lg:text-3xl md:text-2xl text-lg max-[340px]:text-xs text-foreground"
                     : "",
                   isNear && !isActive
-                    ? "lg:text-2xl md:text-xl text-base "
+                    ? "lg:text-2xl md:text-xl text-base max-[340px]:text-xs "
                     : "",
-                  !isActive && !isNear ? "lg:text-2xl md:text-xl text-sm" : "",
+                  !isActive && !isNear
+                    ? "lg:text-2xl md:text-xl text-sm max-[340px]:text-[0.5rem]"
+                    : "",
                   isFailed ? "line-through " : "",
                 ].join(" ")}
               >
                 {s.name}
               </p>
 
-              <p className="text-gray-300 font-medium lg:mt-1 lg:text-base text-sm">
+              <p className="text-gray-300 font-medium lg:mt-1 lg:text-base text-sm max-[340px]:text-[0.6rem]">
                 {s.desc}
               </p>
 
               <span
-                className={`lg:text-base text-xs lg:mt-3 mt-1.5 capitalize flex justify-end items-center gap-2  ${
+                className={`lg:text-base text-xs max-[340px]:text-[0.6rem] lg:mt-3 mt-1.5 max-[340px]:mt-0.5 capitalize flex justify-end items-center gap-2  ${
                   isPlaying ? "text-green-600" : statusClass[s.status]
                 }`}
               >

@@ -63,13 +63,13 @@ export default function SubtitleOverlay({
   return (
     <div
       className={cn(
-        "absolute left-1/2 -translate-x-1/2 z-10 text-center px-3 py-1 rounded  lg:max-w-[80%] max-w-[98%] pointer-events-none",
+        "absolute left-1/2 -translate-x-1/2 z-10 text-center px-3  max-[340px]:px-1.5 py-1  rounded  lg:max-w-[80%] max-w-[98%]  pointer-events-none  max-[340px]:text-[0.6rem]",
         fontSizeMap[fontSize] ?? fontSizeMap["medium"],
         bgOpacityMap[bgOpacity] ?? bgOpacityMap["medium"],
         position === "bottom"
           ? isVisible
-            ? "lg:bottom-30 bottom-18"
-            : "lg:bottom-10 bottom-5"
+            ? "lg:bottom-30 bottom-18  max-[340px]:bottom-10"
+            : "lg:bottom-10 bottom-5  max-[340px]:bottom-1"
           : isVisible
             ? "lg:top-25 top-15"
             : "lg:top-10 top-5",

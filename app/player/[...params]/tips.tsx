@@ -38,7 +38,7 @@ export default function DynamicTip() {
 
   return (
     <div
-      className={`absolute lg:bottom-4 bottom-2 left-1/2 -translate-x-1/2 z-10 text-white lg:text-lg md:text-base font-medium text-center text-sm transition-opacity duration-500 w-full p-4 ${
+      className={`absolute lg:bottom-4 bottom-2 max-[340px]:bottom-0 left-1/2 -translate-x-1/2 z-10 text-center max-[340px]:text-[0.5rem] text-sm  md:text-base lg:text-lg transition-opacity duration-500 w-full p-4 max-[340px]:p-0.5 ${
         fade ? "opacity-100" : "opacity-0"
       }`}
     >

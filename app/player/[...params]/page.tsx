@@ -29,7 +29,7 @@ export default function Player() {
   const episode = Number(params?.[3]) || 1;
   const defaultServerIndex = Number(searchParams.get("server")) || 0;
   const domain = searchParams.get("domainAd") || "zxcstream.icu";
-  const color = searchParams.get("color") || "dc2626";
+  const color = searchParams.get("color") || "fafafa";
   const back = Boolean(searchParams.get("back")) || false;
   const [serverQuality, setServerQuality] = useState<"4k" | null>(null);
   const [doubleTapSide, setDoubleTapSide] = useState<"left" | "right" | null>(
@@ -115,7 +115,7 @@ export default function Player() {
   const subtitleData = source?.subtitles || [];
   const mergeSubtitles = [...subtitleData, ...openSubtitleData];
   const { isVisible, resetTimer, setIsVisible, lockTimer } =
-    useHiddenOverlay(5000);
+    useHiddenOverlay(1500000);
 
   const playerSrc =
     servers[serverIndex].status === "connecting" ||
@@ -334,7 +334,7 @@ export default function Player() {
       >
         <Tailspin size="60" stroke="8" speed="0.9" color="white" />
       </div>
-      {cCToggle && state.canPlay && (
+      {cCToggle && state.canPlay && state.playing && (
         <>
           <SubtitleOverlay
             subtitleUrl={subtitleUrl}
@@ -411,6 +411,7 @@ export default function Player() {
             //
 
             color={color}
+            back={back}
           />
         )}
       </AnimatePresence>
