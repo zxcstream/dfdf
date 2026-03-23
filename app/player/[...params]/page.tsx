@@ -21,6 +21,7 @@ import { useOpenSubtitle } from "@/hooks/open-subtitle";
 import { makeKey } from "@/zustand/videoProgressStore";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { useAdStore } from "@/zustand/ad-store";
 export default function Player() {
   const { params } = useParams();
   const searchParams = useSearchParams();
@@ -32,12 +33,15 @@ export default function Player() {
   const defaultServerIndex = Number(searchParams.get("server")) || 0;
   const domain = searchParams.get("domainAd") || "zxcstream.icu";
   const color = searchParams.get("color") || "fafafa";
-  const back = Boolean(searchParams.get("back")) || false;
-  const [serverQuality, setServerQuality] = useState<"4k" | null>(null);
+  const back = searchParams.get("back") === "true";
+  const auto_play = searchParams.get("autoplay") !== "false";
+
   const [doubleTapSide, setDoubleTapSide] = useState<"left" | "right" | null>(
     null,
   );
   // SETTINGS ZUSTAND
+
+  const triggerAd = useAdStore((state) => state.triggerAd);
   const aspectRatio = useSettingsStore(
     (state) => state.values["Aspect Ratio"]?.id ?? "16:9",
   );
@@ -102,7 +106,6 @@ export default function Player() {
     imdbId,
     title,
     year,
-    quality: serverQuality,
     onCancel: () => {
       setServers((prev) =>
         prev.map((s, i) =>
@@ -124,7 +127,7 @@ export default function Player() {
   const subtitleData = source?.subtitles || [];
   const mergeSubtitles = [...subtitleData, ...openSubtitleData];
   const { isVisible, resetTimer, setIsVisible, lockTimer } =
-    useHiddenOverlay(3000);
+    useHiddenOverlay(5000);
 
   const playerSrc =
     servers[serverIndex].status === "connecting" ||
@@ -159,13 +162,35 @@ export default function Player() {
       handleMarkConnecting();
     }
   }, [source?.links, sourceError, sourceLoading, sourceQualityId]);
+
+  const allSeason = metadata?.seasons?.length ?? 0;
+
+  const activeSeason = metadata?.seasons?.find(
+    (s) => s.season_number === season,
+  );
+
+  const episodeCount = activeSeason?.episode_count ?? 0;
+  let nextSeason = season;
+  let nextEpisode = episode;
+  let canNext = true;
+
+  if (episode < episodeCount) {
+    nextEpisode = episode + 1;
+  } else if (season < allSeason) {
+    nextSeason = season + 1;
+    nextEpisode = 1;
+  } else {
+    canNext = false;
+  }
+
   useEffect(() => {
     if (!state.ended) return;
-    if (autoplay !== "on") return;
-    if (media_type === "movie") return;
 
-    router.push(`/player/tv/${tmdbId}/${season}/${episode + 1}`);
+    if (canNext) {
+      router.push(`/player/tv/${tmdbId}/${nextSeason}/${nextEpisode}`);
+    }
   }, [state.ended]);
+
   const isMobile = /Mobi|Android/i.test(navigator.userAgent);
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -257,7 +282,12 @@ export default function Player() {
 
   if (metadataError) {
     return (
-      <div className="h-screen flex flex-col justify-center items-center gap-6 bg-background relative overflow-hidden">
+      <div
+        className={cn(
+          "h-screen flex flex-col justify-center items-center gap-6 bg-background relative overflow-hidden",
+          isVisible ? "cursor-default" : "cursor-none",
+        )}
+      >
         {/* Ambient glow */}
         <div className="absolute w-64 h-64 rounded-full bg-blue-600/10 blur-3xl pointer-events-none animate-pulse" />
 
@@ -288,6 +318,7 @@ export default function Player() {
     <div
       ref={containerRef}
       className="relative h-svh w-full  overflow-hidden bg-black"
+      onClick={triggerAd}
     >
       <div className="h-full w-full">
         <video
@@ -295,7 +326,7 @@ export default function Player() {
           ref={videoRef}
           onCanPlay={handleCanPlay}
           onError={handleServerFail}
-          autoPlay
+          autoPlay={auto_play && autoplay === "on"}
           className={cn(
             "absolute inset-0 w-full h-full transition-opacity duration-700 mx-auto brightness-200",
             servers[serverIndex].status === "available"
@@ -451,6 +482,10 @@ export default function Player() {
 
             color={color}
             back={back}
+            //
+            canNext={canNext}
+            nextEpisode={nextEpisode}
+            nextSeason={nextSeason}
           />
         )}
       </AnimatePresence>

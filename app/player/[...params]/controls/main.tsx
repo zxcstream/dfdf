@@ -19,8 +19,10 @@ import { AnimatePresence, motion } from "framer-motion";
 import Episodes from "../episodes";
 import { useRouter } from "next/navigation";
 import { QualityTrack } from "@/hooks/source";
-import { Cloud } from "lucide-react";
+import { Cloud, SkipBack } from "lucide-react";
 import { CloudIcon } from "@/components/icons/cloud";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 export interface VideoControlsProps {
   state: VideoPlayerState;
   controls: VideoPlayerControls;
@@ -56,6 +58,10 @@ export interface VideoControlsProps {
   //
   color: string;
   back: boolean;
+
+  canNext: boolean;
+  nextSeason: number;
+  nextEpisode: number;
 }
 export default function MainControls({
   state,
@@ -91,6 +97,11 @@ export default function MainControls({
   source,
   color,
   back,
+
+  ///
+  canNext,
+  nextEpisode,
+  nextSeason,
 }: VideoControlsProps) {
   const router = useRouter();
   const sliderRef = useRef<HTMLDivElement>(null);
@@ -254,6 +265,15 @@ export default function MainControls({
                 <span>{formatTime(state.currentTime)}</span>/
                 <span>{formatTime(state.duration)}</span>
               </div>
+
+              {media_type === "tv" && canNext && (
+                <Link
+                  className=" cursor-pointer text-muted-foreground hidden lg:block"
+                  href={`/player/tv/${tmdbId}/${nextSeason}/${nextEpisode}`}
+                >
+                  Next Episode S{nextSeason}-E{nextEpisode}
+                </Link>
+              )}
             </div>
 
             <div className="flex items-center lg:gap-3 gap-2  max-[340px]:gap-1.5">

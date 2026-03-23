@@ -91,7 +91,7 @@ export default function useSource(
         imdbId,
         title,
         year,
-        quality,
+        // quality,
         ts,
         token,
         f_token,
@@ -126,7 +126,6 @@ interface BuildSourceURLParams {
   imdbId: string | null;
   title: string;
   year: string;
-  quality?: "4k" | null;
   ts: number;
   token: string;
   f_token: string;
@@ -141,7 +140,6 @@ function buildSourceURL({
   episode,
   title,
   year,
-  quality,
   ts,
   token,
   f_token,
@@ -165,9 +163,9 @@ function buildSourceURL({
     params.append("e", imdbId);
   }
 
-  if (server === "resshin" && quality) {
-    params.append("quality", quality);
-  }
+  // if (server === "resshin" && quality) {
+  //   params.append("quality", quality);
+  // }
 
   return `/backend/servers/${server}?${params.toString()}`;
 }

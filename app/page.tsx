@@ -32,7 +32,7 @@ const DEFAULT_PARAMS = [
   {
     key: "autoplay",
     label: "autoplay",
-    desc: "Automatically plays the next episode when the current one ends.",
+    desc: "Automatically plays the movie.",
     example: "e.g true",
   },
   {
