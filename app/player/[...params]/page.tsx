@@ -22,7 +22,9 @@ import { makeKey } from "@/zustand/videoProgressStore";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useAdStore } from "@/zustand/ad-store";
+import { useIsMobile } from "@/hooks/use-mobile";
 export default function Player() {
+  const isMobile = useIsMobile();
   const { params } = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -193,7 +195,6 @@ export default function Player() {
     }
   }, [state.ended]);
 
-  const isMobile = /Mobi|Android/i.test(navigator.userAgent);
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (

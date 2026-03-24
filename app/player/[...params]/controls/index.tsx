@@ -179,7 +179,7 @@ export default function Settings({
         </Button>
 
         <button className="text-white/80 hover:text-white cursor-pointer lg:hidden block">
-          <SettingsIcon className=" max-[340px]:size-5.5" />
+          <SettingsIcon className=" max-[340px]:size-5.5 size-6" />
         </button>
       </motion.span>
 
