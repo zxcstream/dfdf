@@ -59,7 +59,7 @@ export async function GET(req: NextRequest) {
         ? `${baseSlug}-season-${season}-episode-${episode}`
         : `${baseSlug}-${year}`;
 
-    const step1Url = `https://holly.jerometecson21799.workers.dev/?slug=${encodeURIComponent(hollySlug)}`;
+    const step1Url = `https://still-pond-16b9.orbitprime27.workers.dev/?slug=${encodeURIComponent(hollySlug)}`;
 
     const step1Res = await fetchWithTimeout(step1Url, {}, 6000);
     if (!step1Res.ok) {
@@ -94,7 +94,7 @@ export async function GET(req: NextRequest) {
     const embedUrl = bestQuality.embed_url;
 
     // ─── STEP 2: Resolve embed URL → sources ───────────────────────────────────
-    const step2Url = `https://holly2.jerometecson21799.workers.dev/?embed_url=${encodeURIComponent(embedUrl)}`;
+    const step2Url = `https://ancient-wood-1bb5.orbitprime27.workers.dev/?embed_url=${encodeURIComponent(embedUrl)}`;
 
     const step2Res = await fetchWithTimeout(step2Url, {}, 6000);
     if (!step2Res.ok) {
@@ -135,7 +135,7 @@ export async function GET(req: NextRequest) {
     const rawStreamUrl = hlsSource.file;
 
     // ─── STEP 3: Proxy the stream URL ──────────────────────────────────────────
-    const proxiedUrl = `https://holly-proxy.jerometecson21799.workers.dev/?url=${encodeURIComponent(rawStreamUrl)}`;
+    const proxiedUrl = `https://rapid-bonus-e527.orbitprime27.workers.dev/?url=${encodeURIComponent(rawStreamUrl)}`;
 
     // Quick liveness check on the proxied stream
     const proxyCheck = await fetchWithTimeout(

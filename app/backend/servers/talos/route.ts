@@ -9,6 +9,8 @@ export async function GET(req: NextRequest) {
     const mediaType = req.nextUrl.searchParams.get("b");
     const title = req.nextUrl.searchParams.get("f");
     const year = req.nextUrl.searchParams.get("g");
+    const season = req.nextUrl.searchParams.get("s");
+    const episode = req.nextUrl.searchParams.get("e");
     const ts = Number(req.nextUrl.searchParams.get("gago"));
     const token = req.nextUrl.searchParams.get("putangnamo")!;
     const f_token = req.nextUrl.searchParams.get("f_token")!;
@@ -44,14 +46,17 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // ─── Fetch PrimeWire stream link ──────────────────────────────────────────
-    const slug = title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-|-$/g, "");
+    // ─── Fetch source link ────────────────────────────────────────────────────
+    const sourceUrl = new URL("https://test2.jerometecson-main.workers.dev/");
+    sourceUrl.searchParams.set("id", tmdbId);
+    sourceUrl.searchParams.set("type", mediaType);
+    if (season && mediaType === "tv")
+      sourceUrl.searchParams.set("season", season);
+    if (episode && mediaType === "tv")
+      sourceUrl.searchParams.set("episode", episode);
 
-    const primewireRes = await fetchWithTimeout(
-      `https://api.zxcprime.site/primewire/main?slug=${slug}&year=${year}`,
+    const sourceRes = await fetchWithTimeout(
+      sourceUrl.toString(),
       {
         headers: {
           "User-Agent":
@@ -61,25 +66,25 @@ export async function GET(req: NextRequest) {
       10000,
     );
 
-    if (!primewireRes.ok) {
+    if (!sourceRes.ok) {
       return NextResponse.json(
         {
           success: false,
-          error: "PrimeWire upstream failed",
-          status: primewireRes.status,
+          error: "Source upstream failed",
+          status: sourceRes.status,
         },
-        { status: primewireRes.status },
+        { status: sourceRes.status },
       );
     }
 
-    const primewireData = await primewireRes.json();
+    const sourceData = await sourceRes.json();
 
-    if (!primewireData.link) {
+    if (!sourceData.iframeSrc) {
       return NextResponse.json(
         {
           success: false,
-          error: "No stream link from PrimeWire",
-          detail: primewireData,
+          error: "No stream link from source",
+          detail: sourceData,
         },
         { status: 404 },
       );
@@ -87,7 +92,7 @@ export async function GET(req: NextRequest) {
 
     // ─── Step 4: Resolve final video URL from Streamtape ─────────────────────
     const step4Res = await fetchWithTimeout(
-      `https://api.zxcprime.site/primewire/4?url=${encodeURIComponent(primewireData.link)}`,
+      `${req.nextUrl.origin}/backend/proxy/streamtape/?url=${encodeURIComponent(sourceData.iframeSrc)}`,
       {
         headers: {
           "User-Agent":
