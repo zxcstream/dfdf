@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Copy, Check, Sliders, Tv2, Tv, Film, ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -43,7 +42,33 @@ const DEFAULT_PARAMS = [
   },
 ];
 
+const DEFAULT_IDS: Record<string, string> = {
+  movie: "",
+  tv: "",
+};
+
+const DEBOUNCE_MS = 600;
+
 type Tab = "custom" | "builtin";
+
+function useDebounce<T>(value: T, delay: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return debounced;
+}
+
+function useCopy() {
+  const [copied, setCopied] = useState(false);
+  const copy = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return { copied, copy };
+}
 
 function IdInputs({
   type,
@@ -123,25 +148,38 @@ function CopyBar({
   );
 }
 
-function BuiltinPlayer({ type }: { type: string }) {
-  const [id, setId] = useState("1062722");
-  const [season, setSeason] = useState("1");
-  const [episode, setEpisode] = useState("1");
-  const [iframeKey, setIframeKey] = useState(0);
-  const [copied, setCopied] = useState(false);
+function Player({
+  pathPrefix,
+  type,
+  id,
+  setId,
+  season,
+  setSeason,
+  episode,
+  setEpisode,
+}: {
+  pathPrefix: "player" | "embed";
+  type: string;
+  id: string;
+  setId: (v: string) => void;
+  season: string;
+  setSeason: (v: string) => void;
+  episode: string;
+  setEpisode: (v: string) => void;
+}) {
+  const { copied, copy } = useCopy();
 
+  const debounced = useDebounce({ type, id, season, episode }, DEBOUNCE_MS);
+
+  const isReady =
+    debounced.type === "tv"
+      ? !!debounced.id && !!debounced.season && !!debounced.episode
+      : !!debounced.id;
   const playerPath =
-    type === "tv"
-      ? `/embed/tv/${id}/${season}/${episode}`
-      : `/embed/movie/${id}`;
-
+    debounced.type === "tv"
+      ? `/${pathPrefix}/tv/${debounced.id}/${debounced.season}/${debounced.episode}`
+      : `/${pathPrefix}/movie/${debounced.id}`;
   const fullUrl = `https://zxcstream.xyz${playerPath}`;
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(fullUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
 
   return (
     <div className="w-full max-w-4xl flex flex-col gap-6">
@@ -158,44 +196,36 @@ function BuiltinPlayer({ type }: { type: string }) {
           episode={episode}
           setEpisode={setEpisode}
         />
-        <CopyBar url={fullUrl} onCopy={handleCopy} copied={copied} />
+        <CopyBar url={fullUrl} onCopy={() => copy(fullUrl)} copied={copied} />
       </div>
       <div className="w-full aspect-video rounded-xl overflow-hidden shadow-2xl shadow-black/60">
-        <iframe
-          key={iframeKey}
-          className="h-full w-full"
-          src={playerPath}
-          allowFullScreen
-        />
+        {isReady ? (
+          <iframe
+            key={playerPath}
+            className="h-full w-full"
+            src={playerPath}
+            allowFullScreen
+          />
+        ) : (
+          <div className="h-full w-full flex items-center justify-center bg-zinc-900 text-muted-foreground lg:text-base text-sm">
+            Enter an ID to load the player
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
 export default function Home() {
-  const [id, setId] = useState("1265609");
   const [type, setType] = useState("movie");
+  const [id, setId] = useState(DEFAULT_IDS.movie);
   const [season, setSeason] = useState("1");
   const [episode, setEpisode] = useState("1");
-  const [iframeKey, setIframeKey] = useState(0);
-  const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("custom");
 
-  const playerPath =
-    type === "tv"
-      ? `/player/tv/${id}/${season}/${episode}`
-      : `/player/movie/${id}`;
-
-  const fullUrl = `https://zxcstream.xyz${playerPath}`;
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(fullUrl);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleLoad = () => {
-    if (id) setIframeKey((k) => k + 1);
+  const handleTypeChange = (newType: string) => {
+    setType(newType);
+    setId(DEFAULT_IDS[newType]);
   };
 
   return (
@@ -290,7 +320,7 @@ export default function Home() {
               },
             ],
             active: type,
-            setActive: setType,
+            setActive: handleTypeChange,
           },
         ].map(({ label, options, active, setActive }) => (
           <div key={label}>
@@ -319,30 +349,16 @@ export default function Home() {
         {/* Custom Player Tab */}
         {activeTab === "custom" && (
           <>
-            <div className="w-full max-w-4xl">
-              <p className="text-sm text-zinc-500 uppercase tracking-widest mb-1.5 font-medium text-center">
-                {type === "tv" ? "TMDB ID / SS / EP" : "TMDB ID"}
-              </p>
-              <IdInputs
-                type={type}
-                id={id}
-                setId={setId}
-                season={season}
-                setSeason={setSeason}
-                episode={episode}
-                setEpisode={setEpisode}
-              />
-              <CopyBar url={fullUrl} onCopy={handleCopy} copied={copied} />
-            </div>
-
-            <div className="w-full max-w-4xl aspect-video rounded-xl overflow-hidden shadow-2xl shadow-black/60">
-              <iframe
-                key={iframeKey}
-                className="h-full w-full"
-                src={playerPath}
-                allowFullScreen
-              />
-            </div>
+            <Player
+              pathPrefix="player"
+              type={type}
+              id={id}
+              setId={setId}
+              season={season}
+              setSeason={setSeason}
+              episode={episode}
+              setEpisode={setEpisode}
+            />
 
             {/* Params */}
             <div className="w-full max-w-4xl space-y-5">
@@ -389,7 +405,18 @@ export default function Home() {
         )}
 
         {/* Built-in Player Tab */}
-        {activeTab === "builtin" && <BuiltinPlayer type={type} />}
+        {activeTab === "builtin" && (
+          <Player
+            pathPrefix="embed"
+            type={type}
+            id={id}
+            setId={setId}
+            season={season}
+            setSeason={setSeason}
+            episode={episode}
+            setEpisode={setEpisode}
+          />
+        )}
       </div>
     </div>
   );
