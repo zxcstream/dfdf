@@ -61,13 +61,13 @@ export default function RootLayout({
             `,
           }}
         />
-        {isProduction && (
+        {/* {isProduction && (
           <Script
             src="https://cdn.jsdelivr.net/npm/disable-devtool@latest"
             strategy="beforeInteractive"
             disable-devtool-auto=""
           />
-        )}
+        )} */}
       </head>
       <body className="min-h-full flex flex-col">
         <ThemeProvider

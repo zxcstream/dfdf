@@ -152,6 +152,7 @@ export async function GET(req: NextRequest) {
     }
 
     // ─── Step 4 proxy ─────────────────────────────────────────────────────────
+    // ─── Step 4 proxy ─────────────────────────────────────────────────────────
     const step4Res = await fetchWithTimeout(
       `https://zxcstream.xyz/backend/proxy/streamtape/?url=${encodeURIComponent(iframeSrc)}`,
       {
@@ -164,11 +165,32 @@ export async function GET(req: NextRequest) {
     );
 
     if (!step4Res.ok) {
+      let step4ErrorBody: unknown = null;
+      try {
+        step4ErrorBody = await step4Res.json();
+      } catch {
+        try {
+          step4ErrorBody = await step4Res.text();
+        } catch {
+          step4ErrorBody = "(unreadable body)";
+        }
+      }
+
+      console.error("[Step4] upstream failed", {
+        status: step4Res.status,
+        statusText: step4Res.statusText,
+        iframeSrc,
+        body: step4ErrorBody,
+      });
+
       return NextResponse.json(
         {
           success: false,
           error: "Step 4 upstream failed",
           status: step4Res.status,
+          statusText: step4Res.statusText,
+          iframeSrc,
+          detail: step4ErrorBody,
         },
         { status: step4Res.status },
       );
@@ -177,8 +199,18 @@ export async function GET(req: NextRequest) {
     const step4Data = await step4Res.json();
 
     if (!step4Data.videoUrl) {
+      console.error("[Step4] missing videoUrl", {
+        iframeSrc,
+        step4Data,
+      });
+
       return NextResponse.json(
-        { success: false, error: "No videoUrl from Step 4", detail: step4Data },
+        {
+          success: false,
+          error: "No videoUrl from Step 4",
+          iframeSrc,
+          detail: step4Data,
+        },
         { status: 404 },
       );
     }
