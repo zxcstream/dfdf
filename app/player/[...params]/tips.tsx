@@ -1,21 +1,33 @@
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useEffect, useState } from "react";
 
-const tips = [
-  "Tip: Switch server if loading gets stuck.",
-  "Tip: Check your internet connection.",
-  "Tip: Use ↑ ↓ to change servers.",
-  "Tip: Press Enter to select.",
-  "Tip: Adjust brightness in Settings",
-  "Free streaming at zxcstream.icu",
-  "Tip: Press Space or K to play/pause.",
-  "Tip: Press F for fullscreen.",
-  "Tip: Press M to mute.",
-  "Tip: ← → skip 15s.",
-  "Tip: Try dual subtitles.",
-  "Tip: Use sleep timer 😴",
-  "Tip: Change playback speed.",
+const desktopTips = [
+  "Use ↑ ↓ keys to change servers.",
+  "Press Enter to select a server.",
+  "Press Space or K to play or pause.",
+  "Press F to enter fullscreen.",
+  "Press M to mute or unmute.",
+  "Use ← → keys to skip 15 seconds.",
 ];
+const mobileTips = [
+  "Tap twice on the left or right to skip 15 seconds.",
+  "Swipe and tap to select a different server.",
+];
+const commonTips = [
+  "Tap a failed server to try it again.",
+  "Switch servers if the video gets stuck.",
+  "Check your internet connection if buffering occurs.",
+  "Adjust brightness in Settings.",
+  "Try dual subtitles for better understanding.",
+  "Use the sleep timer to stop playback automatically.",
+  "Change playback speed in the player settings.",
+];
+
 export default function DynamicTip() {
+  const isMobile = useIsMobile();
+  const tips = isMobile
+    ? [...commonTips, ...mobileTips]
+    : [...commonTips, ...desktopTips];
   const [currentTipIndex, setCurrentTipIndex] = useState(() =>
     Math.floor(Math.random() * tips.length),
   );
