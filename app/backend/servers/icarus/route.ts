@@ -175,13 +175,30 @@ export async function GET(req: NextRequest) {
     const workingProxy = await getWorkingProxy(sortedDownloads[0].url, proxies);
 
     if (!workingProxy) {
-      console.log("No working proxy");
+      const proxyResults = await Promise.all(
+        proxies.map(async (proxy) => {
+          try {
+            const testUrl = `${proxy}?url=${encodeURIComponent(sortedDownloads[0].url)}`;
+            const res = await fetchWithTimeout(
+              testUrl,
+              { method: "HEAD", headers: { Range: "bytes=0-1" } },
+              3000,
+            );
+            return `${proxy} → ${res.status}`;
+          } catch (e: any) {
+            return `${proxy} → ERROR: ${e.message}`;
+          }
+        }),
+      );
       return NextResponse.json(
-        { success: false, error: "No working proxy available" },
+        {
+          success: false,
+          error: "No working proxy available",
+          debug: proxyResults,
+        },
         { status: 502 },
       );
     }
-
     const links = sortedDownloads.map((d: any) => ({
       resolution: d.resolution,
       format: d.format,
@@ -243,11 +260,8 @@ export async function getWorkingProxy(url: string, proxies: string[]) {
         },
         3000,
       );
-      console.log(`Proxy ${proxy} → status: ${res.status}, ok: ${res.ok}`);
       if (res.ok) return proxy;
-    } catch (e: any) {
-      console.log(`Proxy ${proxy} → FAILED: ${e.message}`);
-    }
+    } catch (e) {}
   }
   return null;
 }
