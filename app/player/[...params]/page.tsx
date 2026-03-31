@@ -28,13 +28,14 @@ import { LyricsServerPicker } from "./serverSelection";
 import SubtitleOverlay from "./subtitle/SubtitleOverlay";
 import Pause from "./pause";
 import DynamicTip from "./tips";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function Player() {
   // ─── URL Params ─────────────────────────────────────────────────────────────
   const { params } = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
-
+  const queryClient = useQueryClient();
   const media_type = String(params?.[0]);
   const tmdbId = String(params?.[1]);
   const season = Number(params?.[2]) || 1;
@@ -109,6 +110,7 @@ export default function Player() {
     data: source,
     error: sourceError,
     isLoading: sourceLoading,
+    refetch,
   } = useSource({
     media_type,
     tmdbId,
@@ -182,6 +184,19 @@ export default function Player() {
   }, [serverIndex]);
   useEffect(() => {
     if (sourceError || source?.links.length === 0) {
+      queryClient.removeQueries({
+        queryKey: [
+          "get-source",
+          tmdbId,
+          media_type,
+          season,
+          episode,
+          imdbId,
+          fetchServer.server,
+          title,
+          year,
+        ],
+      });
       handleServerFail();
     }
   }, [source?.links, sourceError]);
@@ -190,7 +205,29 @@ export default function Player() {
     if (!source?.links) return;
     if (source?.links.length > 0) handleMarkConnecting();
   }, [source?.links]);
+  // useEffect(() => {
+  //   if (sourceLoading || (!source?.links && !sourceError)) return;
+  //   if (sourceError || source?.links.length === 0) {
+  //     queryClient.removeQueries({
+  //       queryKey: [
+  //         "get-source",
+  //         tmdbId,
+  //         media_type,
+  //         season,
+  //         episode,
+  //         imdbId,
+  //         fetchServer.server,
+  //         title,
+  //         year,
+  //       ],
+  //     });
+  //     handleServerFail();
+  //   } else {
+  //     handleMarkConnecting();
+  //   }
+  // }, [source?.links, sourceError, sourceLoading]);
 
+  // Effect 2: Handle quality change separately
   useEffect(() => {
     if (!source?.links) return;
     handleQualityChange();
@@ -296,7 +333,16 @@ export default function Player() {
           key={`${playerSrc}-${sourceQualityId}`}
           ref={videoRef}
           onCanPlayThrough={handleCanPlay}
-          onError={handleServerFail}
+          onError={(e) => {
+            handleServerFail();
+            const error = e.currentTarget.error;
+            console.log(
+              "Video error code:",
+              error?.code,
+              "message:",
+              error?.message,
+            );
+          }}
           autoPlay={auto_play && autoplay === "on"}
           muted={auto_play && autoplay === "on"}
           className={cn(

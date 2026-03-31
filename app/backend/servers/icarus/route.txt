@@ -2,12 +2,6 @@ import { fetchWithTimeout } from "@/lib/fetch-timeout";
 import { NextRequest, NextResponse } from "next/server";
 import { validateBackendToken } from "@/lib/validate-token";
 import { isValidReferer } from "@/lib/allowed-referers";
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.SUPABASE_URL_MOVIEBOX!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY_MOVIEBOX!,
-);
 
 export async function GET(req: NextRequest) {
   try {
@@ -42,6 +36,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // block direct /api access
     const referer = req.headers.get("referer") || "";
     if (!isValidReferer(referer)) {
       return NextResponse.json(
@@ -49,11 +44,12 @@ export async function GET(req: NextRequest) {
         { status: 403 },
       );
     }
-
     // -------- MovieBox Logic --------
     const randomIP =
       africanIPs[Math.floor(Math.random() * africanIPs.length)].ip;
     const host = "h5.aoneroom.com";
+
+    //movieboxapp.in
     const baseUrl = `https://${host}`;
     const headers: Record<string, string> = {
       "X-Client-Info": '{"timezone":"Africa/Nairobi"}',
@@ -67,96 +63,62 @@ export async function GET(req: NextRequest) {
       "X-Real-IP": randomIP,
       Origin: "https://fmoviesunblocked.net",
     };
+    // Search for movie/TV show
+    const searchRes = await fetch(
+      `${baseUrl}/wefeed-h5-bff/web/subject/search`,
+      {
+        method: "POST",
+        headers: { ...headers, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          keyword: title,
+          page: 1,
+          perPage: 24,
+          subjectType: mediaType === "tv" ? 2 : 1,
+        }),
+      },
+    );
 
-    // -------- Cache Lookup --------
-    const cacheKey = `${mediaType}:${title.toLowerCase()}:${year}`;
-    let subjectId: string;
-    let detailPath: string;
-
-    const { data: cached } = await supabase
-      .from("moviebox_cache")
-      .select("subject_id, detail_path")
-      .eq("cache_key", cacheKey)
-      .maybeSingle();
-
-    if (cached) {
-      // Cache hit — use stored values, skip search + detail fetch
-      subjectId = cached.subject_id;
-      detailPath = cached.detail_path;
-    } else {
-      // Cache miss — do the expensive search + detail fetch
-      const searchRes = await fetch(
-        `${baseUrl}/wefeed-h5-bff/web/subject/search`,
-        {
-          method: "POST",
-          headers: { ...headers, "Content-Type": "application/json" },
-          body: JSON.stringify({
-            keyword: title,
-            page: 1,
-            perPage: 24,
-            subjectType: mediaType === "tv" ? 2 : 1,
-          }),
-        },
+    const searchJson = await searchRes.json();
+    const results = searchJson?.data?.data || searchJson?.data || searchJson;
+    const items = results?.items || [];
+    if (!items.length)
+      return NextResponse.json(
+        { success: false, error: "No search results" },
+        { status: 404 },
       );
 
-      const searchJson = await searchRes.json();
-      const results = searchJson?.data?.data || searchJson?.data || searchJson;
-      const items = results?.items || [];
-      if (!items.length)
-        return NextResponse.json(
-          { success: false, error: "No search results" },
-          { status: 404 },
-        );
-
-      const selectedItem =
-        items.find(
-          (i: any) =>
-            (i?.title || "").toLowerCase().includes(title.toLowerCase()) &&
-            !(i?.title || "").includes("["),
-        ) ||
-        items.find((i: any) =>
-          (i?.title || "").toLowerCase().includes(title.toLowerCase()),
-        );
-
-      if (!selectedItem)
-        return NextResponse.json(
-          { success: false, error: "Unavailable" },
-          { status: 404 },
-        );
-
-      const rawSubjectId = selectedItem?.subjectId;
-      if (!rawSubjectId)
-        return NextResponse.json(
-          { success: false, error: "subjectId not found" },
-          { status: 404 },
-        );
-
-      subjectId = String(rawSubjectId);
-
-      // Detail fetch
-      const detailRes = await fetch(
-        `${baseUrl}/wefeed-h5-bff/web/subject/detail?subjectId=${encodeURIComponent(subjectId)}`,
-        { headers },
+    const selectedItem =
+      items.find(
+        (i: any) =>
+          (i?.title || "").toLowerCase().includes(title.toLowerCase()) &&
+          !(i?.title || "").includes("["),
+      ) ||
+      // fallback to anything that matches
+      items.find((i: any) =>
+        (i?.title || "").toLowerCase().includes(title.toLowerCase()),
       );
-      const detailJson = await detailRes.json();
-      const info = detailJson?.data?.data || detailJson?.data || detailJson;
-      detailPath = info?.subject?.detailPath || "";
-
-      // Save to cache — only if not already exists (insert, not upsert)
-      await supabase.from("moviebox_cache").upsert(
-        {
-          cache_key: cacheKey,
-          subject_id: subjectId,
-          detail_path: detailPath,
-        },
-        {
-          onConflict: "cache_key",
-          ignoreDuplicates: true,
-        },
+    if (!selectedItem)
+      return NextResponse.json(
+        { success: false, error: "Unavailable" },
+        { status: 404 },
       );
-    }
+    const rawSubjectId = selectedItem?.subjectId;
+    if (!rawSubjectId)
+      return NextResponse.json(
+        { success: false, error: "subjectId not found" },
+        { status: 404 },
+      );
+    const subjectId = String(rawSubjectId);
 
-    // -------- Download Sources (always fresh) --------
+    // Detail info
+    const detailRes = await fetch(
+      `${baseUrl}/wefeed-h5-bff/web/subject/detail?subjectId=${encodeURIComponent(subjectId)}`,
+      { headers },
+    );
+    const detailJson = await detailRes.json();
+    const info = detailJson?.data?.data || detailJson?.data || detailJson;
+    const detailPath = info?.subject?.detailPath || "";
+    // Download sources
     const params = new URLSearchParams({ subjectId });
     if (mediaType === "tv") {
       if (season) params.set("se", String(season));
@@ -173,11 +135,10 @@ export async function GET(req: NextRequest) {
         },
       },
     );
-
     console.log("detailPath", detailPath);
     console.log("subjectId", subjectId);
-
     const sourcesJson = await sourcesRes.json();
+    // console.log("sourcesJson", sourcesJson);
     const sources = sourcesJson?.data?.data || sourcesJson?.data || sourcesJson;
     const downloads = sources?.downloads || [];
     if (!downloads.length)
@@ -186,6 +147,7 @@ export async function GET(req: NextRequest) {
         { status: 404 },
       );
 
+    // Pick highest resolution
     const sortedDownloads = downloads
       .filter((d: any) => d?.url && typeof d.url === "string")
       .sort((a: any, b: any) => (b.resolution || 0) - (a.resolution || 0));
@@ -195,6 +157,7 @@ export async function GET(req: NextRequest) {
         { success: false, error: "No valid download URLs" },
         { status: 404 },
       );
+    const videoUrl = sortedDownloads[0].url;
 
     const proxies = [
       "https://silent-glitter-744f.zxcprime365.workers.dev/",
@@ -210,9 +173,10 @@ export async function GET(req: NextRequest) {
       "https://damp-bonus-5625.mosangfour.workers.dev/",
       "https://still-butterfly-9b3e.zxcprime360.workers.dev/",
     ];
-
     const workingProxy = await getWorkingProxy(sortedDownloads[0].url, proxies);
+
     if (!workingProxy) {
+      // console.log("No working proxy");
       return NextResponse.json(
         { success: false, error: "No working proxy available" },
         { status: 502 },
@@ -237,25 +201,47 @@ export async function GET(req: NextRequest) {
       success: true,
       links,
       subtitles,
-      meow: !!cached,
     });
   } catch (err: any) {
+    // console.error("MovieBox API Error:", err);
     return NextResponse.json(
       { success: false, error: "Internal server error" },
       { status: 500 },
     );
   }
 }
-
 const africanIPs = generateAfricanIPs(17);
-
+// const africanIPs = [
+//   { ip: "41.75.203.118" },
+//   { ip: "41.216.89.67" },
+//   { ip: "102.176.54.203" },
+//   { ip: "102.38.91.144" },
+//   { ip: "197.159.33.201" },
+//   { ip: "197.248.120.77" },
+//   { ip: "105.112.67.219" },
+//   { ip: "105.245.18.93" },
+//   { ip: "196.46.128.55" },
+//   { ip: "196.223.77.134" },
+//   { ip: "154.118.92.201" },
+//   { ip: "154.73.210.66" },
+//   { ip: "41.139.176.88" },
+//   { ip: "41.190.45.132" },
+//   { ip: "105.92.144.211" },
+//   { ip: "197.221.63.98" },
+//   { ip: "102.164.12.77" },
+// ];
 export async function getWorkingProxy(url: string, proxies: string[]) {
   for (const proxy of proxies) {
     try {
       const testUrl = `${proxy}?url=${encodeURIComponent(url)}`;
       const res = await fetchWithTimeout(
         testUrl,
-        { method: "HEAD", headers: { Range: "bytes=0-1" } },
+        {
+          method: "HEAD",
+          headers: {
+            Range: "bytes=0-1",
+          },
+        },
         3000,
       );
       if (res.ok) return proxy;
@@ -263,10 +249,11 @@ export async function getWorkingProxy(url: string, proxies: string[]) {
   }
   return null;
 }
-
 function generateAfricanIPs(count = 20) {
   const prefixes = [41, 102, 105, 154, 196, 197];
+
   const rand = () => Math.floor(Math.random() * 254) + 1;
+
   return Array.from({ length: count }, () => ({
     ip: `${prefixes[Math.floor(Math.random() * prefixes.length)]}.${rand()}.${rand()}.${rand()}`,
   }));

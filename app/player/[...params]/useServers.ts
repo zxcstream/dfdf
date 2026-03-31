@@ -1,4 +1,5 @@
 import { initialServers } from "@/lib/server-list";
+import { ServerTypes } from "@/types/player-types";
 import { useState } from "react";
 
 export function usePlayerServers({
@@ -6,7 +7,7 @@ export function usePlayerServers({
 }: {
   defaultServerIndex: number;
 }) {
-  const [servers, setServers] = useState(initialServers);
+  const [servers, setServers] = useState<ServerTypes[]>(initialServers);
   const [serverIndex, setServerIndex] = useState(defaultServerIndex);
   const [playingIndex, setPlayingIndex] = useState<number | null>(null);
 
@@ -45,7 +46,7 @@ export function usePlayerServers({
           ? find("available")
           : find("queue") !== -1
             ? find("queue")
-            : find("cancelled");
+            : -1;
 
       setServerIndex(next);
       return prev.map((s, i) =>
