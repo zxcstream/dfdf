@@ -9,6 +9,31 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY_MOVIEBOX!,
 );
 
+const africanIPs = generateAfricanIPs(17);
+
+function generateAfricanIPs(count = 20) {
+  const prefixes = [41, 102, 105, 154, 196, 197];
+  const rand = () => Math.floor(Math.random() * 254) + 1;
+  return Array.from({ length: count }, () => ({
+    ip: `${prefixes[Math.floor(Math.random() * prefixes.length)]}.${rand()}.${rand()}.${rand()}`,
+  }));
+}
+
+export async function getWorkingProxy(url: string, proxies: string[]) {
+  for (const proxy of proxies) {
+    try {
+      const testUrl = `${proxy}?url=${encodeURIComponent(url)}`;
+      const res = await fetchWithTimeout(
+        testUrl,
+        { method: "HEAD", headers: { Range: "bytes=0-1" } },
+        3000,
+      );
+      if (res.ok) return proxy;
+    } catch (e) {}
+  }
+  return null;
+}
+
 export async function GET(req: NextRequest) {
   try {
     const tmdbId = req.nextUrl.searchParams.get("a");
@@ -69,22 +94,21 @@ export async function GET(req: NextRequest) {
     };
 
     // -------- Cache Lookup --------
-    const cacheKey = `${mediaType}:${title.toLowerCase()}:${year}`;
     let subjectId: string;
     let detailPath: string;
 
     const { data: cached } = await supabase
       .from("moviebox_cache")
       .select("subject_id, detail_path")
-      .eq("cache_key", cacheKey)
+      .eq("tmdb_id", tmdbId)
+      .eq("media_type", mediaType)
       .maybeSingle();
 
     if (cached) {
-      // Cache hit — use stored values, skip search + detail fetch
       subjectId = cached.subject_id;
       detailPath = cached.detail_path;
     } else {
-      // Cache miss — do the expensive search + detail fetch
+      // Search
       const searchRes = await fetch(
         `${baseUrl}/wefeed-h5-bff/web/subject/search`,
         {
@@ -133,7 +157,7 @@ export async function GET(req: NextRequest) {
 
       subjectId = String(rawSubjectId);
 
-      // Detail fetch
+      // Detail
       const detailRes = await fetch(
         `${baseUrl}/wefeed-h5-bff/web/subject/detail?subjectId=${encodeURIComponent(subjectId)}`,
         { headers },
@@ -142,15 +166,16 @@ export async function GET(req: NextRequest) {
       const info = detailJson?.data?.data || detailJson?.data || detailJson;
       detailPath = info?.subject?.detailPath || "";
 
-      // Save to cache — only if not already exists (insert, not upsert)
+      // Save to cache
       await supabase.from("moviebox_cache").upsert(
         {
-          cache_key: cacheKey,
+          tmdb_id: tmdbId,
+          media_type: mediaType,
           subject_id: subjectId,
           detail_path: detailPath,
         },
         {
-          onConflict: "cache_key",
+          onConflict: "tmdb_id,media_type",
           ignoreDuplicates: true,
         },
       );
@@ -245,29 +270,4 @@ export async function GET(req: NextRequest) {
       { status: 500 },
     );
   }
-}
-
-const africanIPs = generateAfricanIPs(17);
-
-export async function getWorkingProxy(url: string, proxies: string[]) {
-  for (const proxy of proxies) {
-    try {
-      const testUrl = `${proxy}?url=${encodeURIComponent(url)}`;
-      const res = await fetchWithTimeout(
-        testUrl,
-        { method: "HEAD", headers: { Range: "bytes=0-1" } },
-        3000,
-      );
-      if (res.ok) return proxy;
-    } catch (e) {}
-  }
-  return null;
-}
-
-function generateAfricanIPs(count = 20) {
-  const prefixes = [41, 102, 105, 154, 196, 197];
-  const rand = () => Math.floor(Math.random() * 254) + 1;
-  return Array.from({ length: count }, () => ({
-    ip: `${prefixes[Math.floor(Math.random() * prefixes.length)]}.${rand()}.${rand()}.${rand()}`,
-  }));
 }
