@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { ALLOWED_ORIGINS, isValidReferer } from "@/lib/allowed-referers";
 
-const SECRET = process.env.API_SECRET || "supersecret123";
+const SECRET = process.env.API_SECRET!;
 
 function validateFrontendToken(f_token: string, id: string, ts: number) {
   const expected = crypto
@@ -62,3 +62,4 @@ export async function POST(req: NextRequest) {
   const b_token = generateBackendToken(f_token, idd);
   return NextResponse.json(b_token);
 }
+// Bind HMAC token to IP — so even a stolen token is useless
