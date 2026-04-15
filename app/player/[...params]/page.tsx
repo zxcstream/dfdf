@@ -99,11 +99,47 @@ export default function Player() {
   });
 
   const imdbId = metadata?.external_ids?.imdb_id ?? null;
+  const movie_id = metadata?.id;
+  const poster = metadata?.poster_path || null;
+  const backdrop =
+    metadata?.images?.backdrops?.find((f) => f.iso_639_1 === "en")?.file_path ||
+    metadata?.backdrop_path ||
+    null;
   const title = metadata?.title || metadata?.name || "";
   const date = metadata?.release_date ?? metadata?.first_air_date;
   const year = date ? String(new Date(date).getFullYear()) : "";
-  const genre = metadata?.genres[0]?.name ?? "N/A";
+  const genre = metadata?.genres?.[0]?.name ?? "N/A";
   const totalSeasons = metadata?.number_of_seasons || 0;
+
+  useEffect(() => {
+    window.parent.postMessage(
+      {
+        type: "METADATA",
+        payload: {
+          movie_id,
+          media_type,
+          season,
+          episode,
+          title,
+          year,
+          genre,
+          poster,
+          backdrop,
+        },
+      },
+      "*",
+    );
+  }, [
+    movie_id,
+    media_type,
+    season,
+    episode,
+    title,
+    year,
+    genre,
+    poster,
+    backdrop,
+  ]);
 
   // ─── Source ──────────────────────────────────────────────────────────────────
   const {
