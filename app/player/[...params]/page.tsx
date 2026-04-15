@@ -118,8 +118,8 @@ export default function Player() {
         payload: {
           movie_id,
           media_type,
-          season,
-          episode,
+          season: media_type === "tv" ? season : null,
+          episode: media_type === "tv" ? episode : null,
           title,
           year,
           genre,
