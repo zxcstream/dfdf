@@ -234,6 +234,19 @@ export function useVideoPlayer({
         useVideoProgressStore
           .getState()
           .saveProgress(progressKey, time, video.duration);
+
+        window.parent.postMessage(
+          {
+            type: "VIDEO_PROGRESS",
+            payload: {
+              progressKey,
+              currentTime: time,
+              duration: video.duration,
+              percent: Math.round((time / video.duration) * 100),
+            },
+          },
+          "*", // or replace "*" with your parent site's origin e.g. "https://yoursite.com"
+        );
       }
 
       setState((p) => ({ ...p, currentTime: time, ended: video.ended }));
@@ -252,12 +265,29 @@ export function useVideoPlayer({
     const onVolumeChange = () =>
       setState((p) => ({ ...p, volume: video.volume, muted: video.muted }));
     const onWaiting = () => setState((p) => ({ ...p, waiting: true }));
-    const onPlaying = () =>
+    // const onPlaying = () =>
+    //   setState((p) => ({ ...p, waiting: false, playing: true }));
+    const onPlaying = () => {
+      window.parent.postMessage({ type: "VIDEO_PLAY" }, "*");
       setState((p) => ({ ...p, waiting: false, playing: true }));
-    const onPause = () => setState((p) => ({ ...p, playing: false }));
-    const onEnded = () => {
-      useVideoProgressStore.getState().clearProgress(progressKey);
+    };
+    // const onPause = () => setState((p) => ({ ...p, playing: false }));
+    const onPause = () => {
+      window.parent.postMessage({ type: "VIDEO_PAUSE" }, "*");
+      setState((p) => ({ ...p, playing: false }));
+    };
 
+    // const onEnded = () => {
+    //   useVideoProgressStore.getState().clearProgress(progressKey);
+
+    //   setState((p) => ({ ...p, playing: false, ended: true }));
+    // };
+    const onEnded = () => {
+      window.parent.postMessage(
+        { type: "VIDEO_ENDED", payload: { progressKey } },
+        "*",
+      );
+      useVideoProgressStore.getState().clearProgress(progressKey);
       setState((p) => ({ ...p, playing: false, ended: true }));
     };
     const onPip = () => setState((p) => ({ ...p, pip: true }));
