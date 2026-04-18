@@ -148,7 +148,7 @@ export async function GET(req: NextRequest) {
       detailPath = cached.detail_path;
     } else {
       // Search
-      const searchRes = await fetch(
+      const searchRes = await fetchWithTimeout(
         `${baseUrl}/wefeed-h5-bff/web/subject/search`,
         {
           method: "POST",
@@ -160,6 +160,7 @@ export async function GET(req: NextRequest) {
             subjectType: mediaType === "tv" ? 2 : 1,
           }),
         },
+        8000,
       );
 
       const searchJson = await searchRes.json();
@@ -197,9 +198,10 @@ export async function GET(req: NextRequest) {
       subjectId = String(rawSubjectId);
 
       // Detail
-      const detailRes = await fetch(
+      const detailRes = await fetchWithTimeout(
         `${baseUrl}/wefeed-h5-bff/web/subject/detail?subjectId=${encodeURIComponent(subjectId)}`,
         { headers },
+        8000,
       );
       const detailJson = await detailRes.json();
       const info = detailJson?.data?.data || detailJson?.data || detailJson;
@@ -227,7 +229,7 @@ export async function GET(req: NextRequest) {
       if (episode) params.set("ep", String(episode));
     }
 
-    const sourcesRes = await fetch(
+    const sourcesRes = await fetchWithTimeout(
       `${baseUrl}/wefeed-h5-bff/web/subject/download?${params.toString()}`,
       {
         headers: {
@@ -236,6 +238,7 @@ export async function GET(req: NextRequest) {
           Origin: "https://fmoviesunblocked.net",
         },
       },
+      8000,
     );
 
     console.log("detailPath", detailPath);

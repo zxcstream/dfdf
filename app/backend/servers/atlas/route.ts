@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { validateBackendToken } from "@/lib/validate-token";
 import { createClient } from "@supabase/supabase-js";
 import { isValidReferer } from "@/lib/allowed-referers";
+import { fetchWithTimeout } from "@/lib/fetch-timeout";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -172,8 +173,10 @@ export async function GET(req: NextRequest) {
           { status: 404 },
         );
 
-      const playerData = await fetch(
+      const playerData = await fetchWithTimeout(
         `${FEBBOX_PLAYER_WORKER}/?fid=${bestFile.data_id}&share_key=${shareToken}`,
+        {},
+        8000,
       ).then((r) => r.json());
       console.log("xxxxxxx", playerData);
       return buildResponse(playerData);
@@ -187,8 +190,9 @@ export async function GET(req: NextRequest) {
       ...(season && { season }),
       ...(episode && { episode }),
     });
-
-    const data = await fetch(`${WORKER_URL}/?${qs}`).then((r) => r.json());
+    const data = await fetchWithTimeout(`${WORKER_URL}/?${qs}`, {}, 8000).then(
+      (r) => r.json(),
+    );
     if (!data.success) return NextResponse.json(data, { status: 500 });
 
     const { shareToken, files } = data;
@@ -204,8 +208,10 @@ export async function GET(req: NextRequest) {
       (e: any) => console.warn("dbSave failed:", e.message),
     );
 
-    const playerData = await fetch(
+    const playerData = await fetchWithTimeout(
       `${FEBBOX_PLAYER_WORKER}/?fid=${bestFile.data_id}&share_key=${shareToken}`,
+      {},
+      8000,
     ).then((r) => r.json());
 
     return buildResponse(playerData);
