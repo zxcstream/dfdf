@@ -1,23 +1,20 @@
 // hooks/useSandboxDetection.js
 import { useState, useEffect } from "react";
+
 export function useSandboxDetection() {
   const [isSandboxed, setIsSandboxed] = useState(false);
 
+  
   useEffect(() => {
-    const checkSandbox = () => {
-      if (window.self === window.top) return false;
+    const inIframe = window.self !== window.top;
+    if (!inIframe) return; // not in an iframe, don't bother checking
 
-      try {
-        // window.top is null in some sandboxed contexts — treat as sandboxed
-        if (!window.top) return true;
-        void window.top.location.href;
-        return false;
-      } catch (e) {
-        return true;
-      }
-    };
-
-    setIsSandboxed(checkSandbox());
+    const popup = window.open("", "_blank", "width=1,height=1");
+    if (popup === null) {
+      setIsSandboxed(true);
+    } else {
+      popup.close();
+    }
   }, []);
 
   return isSandboxed;

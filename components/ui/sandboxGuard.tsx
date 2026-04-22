@@ -19,7 +19,7 @@ export default function SandboxGuard({
         </p>
         <p className="text-gray-600">
           Please remove the{" "}
-          <code className=" text-red-500 px-1.5 py-0.5 rounded text-sm font-mono">
+          <code className=" text-red-500 px-1.5 py-0.5 rounded text-sm font-medium">
             sandbox
           </code>{" "}
           attribute from your iframe, or contact the site owner.
