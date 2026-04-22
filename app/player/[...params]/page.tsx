@@ -29,6 +29,8 @@ import SubtitleOverlay from "./subtitle/SubtitleOverlay";
 import Pause from "./pause";
 import DynamicTip from "./tips";
 import { useQueryClient } from "@tanstack/react-query";
+import LoadingMetadata from "./logo";
+import { ArrowLeftIcon } from "@/components/icons/arrow";
 
 export default function Player() {
   // ─── URL Params ─────────────────────────────────────────────────────────────
@@ -40,10 +42,10 @@ export default function Player() {
   const tmdbId = String(params?.[1]);
   const season = Number(params?.[2]) || 1;
   const episode = Number(params?.[3]) || 1;
-
+  const [showServer, setShowServer] = useState(false);
   const defaultServerIndex = Number(searchParams.get("server")) || 0;
   const domain = searchParams.get("domainAd") || "zxcstream.icu";
-  const color = searchParams.get("color") || "fafafa";
+  const color = searchParams.get("color") || "FF0000";
   const back = searchParams.get("back") === "true";
   const auto_play = searchParams.get("autoplay") === "true";
 
@@ -110,7 +112,9 @@ export default function Player() {
   const year = date ? String(new Date(date).getFullYear()) : "";
   const genre = metadata?.genres?.[0]?.name ?? "N/A";
   const totalSeasons = metadata?.number_of_seasons || 0;
-
+  const logo = metadata?.images.logos.find(
+    (f) => f.iso_639_1 === "en",
+  )?.file_path;
   useEffect(() => {
     window.parent.postMessage(
       {
@@ -423,7 +427,11 @@ export default function Player() {
           </motion.div>
         )}
       </AnimatePresence>
-
+      {back && !state.canPlay && (
+        <button onClick={() => router.back()} className="cursor-pointer">
+          <ArrowLeftIcon className="absolute lg:top-4 top-3 lg:left-6 left-2 lg:size-13  md:size-10 size-8  max-[340px]:size-5.5 text-muted-foreground z-30" />
+        </button>
+      )}
       {/* Loading tip */}
       {!state.canPlay && <DynamicTip />}
 
@@ -434,6 +442,7 @@ export default function Player() {
         )}
       </AnimatePresence>
 
+      {logo && !isMobile && !state.canPlay && <LoadingMetadata logo={logo} />}
       {/* Double tap indicator */}
       <AnimatePresence>
         {doubleTapSide && state.canPlay && (
@@ -495,7 +504,7 @@ export default function Player() {
 
       {/* Server picker */}
       <AnimatePresence>
-        {(isVisible || !state.canPlay) && (
+        {(!state.canPlay || showServer) && (isVisible || !state.canPlay) && (
           <LyricsServerPicker
             servers={servers}
             playingIndex={playingIndex}
@@ -538,6 +547,8 @@ export default function Player() {
             canNext={canNext}
             nextEpisode={nextEpisode}
             nextSeason={nextSeason}
+            showServer={showServer}
+            setShowServer={setShowServer}
           />
         )}
       </AnimatePresence>

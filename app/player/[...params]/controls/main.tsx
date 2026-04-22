@@ -19,6 +19,10 @@ import Episodes from "../episodes";
 import { useRouter } from "next/navigation";
 import { QualityTrack } from "@/hooks/source";
 import Link from "next/link";
+import { Cloud } from "lucide-react";
+import { CloudIcon } from "@/components/icons/cloud";
+import { ServerIcon } from "@/components/icons/server";
+import { DownloadIcon } from "@/components/icons/download";
 export interface VideoControlsProps {
   state: VideoPlayerState;
   controls: VideoPlayerControls;
@@ -60,6 +64,9 @@ export interface VideoControlsProps {
   canNext: boolean;
   nextSeason: number;
   nextEpisode: number;
+
+  showServer: boolean;
+  setShowServer: Dispatch<SetStateAction<boolean>>;
 }
 export default function MainControls({
   state,
@@ -102,6 +109,8 @@ export default function MainControls({
   canNext,
   nextEpisode,
   nextSeason,
+  showServer,
+  setShowServer,
 }: VideoControlsProps) {
   const router = useRouter();
   const sliderRef = useRef<HTMLDivElement>(null);
@@ -145,19 +154,14 @@ export default function MainControls({
           </div>
         </div> */}
         <div></div>
-        {/* <button className="text-white/80 hover:text-white cursor-pointer">
-          <CloudIcon className="lg:size-13 md:size-9 size-8  max-[340px]:size-5.5" />
-        </button> */}
-        {media_type === "tv" && (
-          <Episodes
-            tmdbId={tmdbId}
-            season={season}
-            episode={episode}
-            lockTimer={lockTimer}
-            resetTimer={resetTimer}
-            totalSeasons={totalSeasons}
-          />
-        )}
+        <div className="flex  lg:gap-6 gap-3 items-center ">
+          <button
+            onClick={() => setShowServer((prev) => !prev)}
+            className="text-white/80 hover:text-white cursor-pointer"
+          >
+            <ServerIcon className="lg:size-10.5 md:size-8 size-7 " />
+          </button>
+        </div>
       </div>
       <div className="w-full lg:px-6 px-2   max-[340px]:px-1 lg:py-6 py-3  max-[340px]:py-1.5  space-y-3  max-[340px]:space-y-1  ">
         <div className="lg:p-4 p-2  max-[340px]:p-1  pointer-events-none">
@@ -287,7 +291,7 @@ export default function MainControls({
               )}
             </div>
 
-            <div className="flex items-center lg:gap-3 gap-2  max-[340px]:gap-1.5">
+            <div className="flex items-center lg:gap-4 gap-2  max-[340px]:gap-1.5">
               <Settings
                 mergeSubtitles={mergeSubtitles}
                 quality={quality}
@@ -304,7 +308,16 @@ export default function MainControls({
                 lockTimer={lockTimer}
                 source={source}
               />
-
+              {media_type === "tv" && (
+                <Episodes
+                  tmdbId={tmdbId}
+                  season={season}
+                  episode={episode}
+                  lockTimer={lockTimer}
+                  resetTimer={resetTimer}
+                  totalSeasons={totalSeasons}
+                />
+              )}
               <button
                 className="text-white/80 hover:text-white cursor-pointer"
                 onClick={() => setCcToggle((prev) => !prev)}
@@ -316,8 +329,8 @@ export default function MainControls({
                 )}
               </button>
               {/* <button className="text-white/80 hover:text-white cursor-pointer">
-              <DownloadIcon className="size-12.5" />
-            </button> */}
+                <ServerIcon className="lg:size-12 md:size-9 size-7  max-[340px]:size-5.5" />
+              </button> */}
               <button
                 onClick={controls.toggleFullscreen}
                 className="cursor-pointer text-white/80 hover:text-white"
