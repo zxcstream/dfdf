@@ -27,7 +27,7 @@ interface UseSourceParams {
   title: string;
   year: string;
   quality?: "4k" | null;
-  enable: boolean
+  enable: boolean;
 }
 
 export default function useSource(
@@ -59,7 +59,7 @@ export default function useSource(
       year,
       quality,
     ],
-    enabled: Boolean(tmdbId && server === server) && enable, // ← blocks fetch while scrolling
+    enabled: Boolean(tmdbId && imdbId && server === server) && enable, // ← blocks fetch while scrolling
     retry: false,
     staleTime: 1000 * 60 * 60, // 1 hour → no refetch for 1 hour
     gcTime: 1000 * 60 * 60, // 1 hour → garbage collect after 1 hour
