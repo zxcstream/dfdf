@@ -12,7 +12,7 @@ export const useAdStore = create<AdStore>()(
       lastAdTime: 0,
       triggerAd: () => {
         const now = Date.now();
-        const fiveMinutes = 5 * 60 * 1000;
+        const fiveMinutes = 10 * 60 * 1000;
         const minutesPassed = (now - get().lastAdTime) / 1000 / 60;
 
         console.log(

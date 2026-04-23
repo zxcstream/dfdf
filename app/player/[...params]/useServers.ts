@@ -10,10 +10,10 @@ export function usePlayerServers({
   const [servers, setServers] = useState<ServerTypes[]>(initialServers);
   const [serverIndex, setServerIndex] = useState(defaultServerIndex);
   const [playingIndex, setPlayingIndex] = useState<number | null>(null);
-
+  const [allFailed, setAllFailed] = useState(false);
   function handleManualSelect(i: number) {
     if (i === playingIndex) return;
-
+    setAllFailed(false);
     // if leaving a connected server, clear playingIndex
     if (playingIndex === serverIndex) setPlayingIndex(null);
 
@@ -47,6 +47,14 @@ export function usePlayerServers({
           : find("queue") !== -1
             ? find("queue")
             : -1;
+
+      // ✅ All servers exhausted — mark current as failed, don't update index
+      if (next === -1) {
+        setAllFailed(true);
+        return prev.map((s, i) =>
+          i === serverIndex ? { ...s, status: "failed" } : s,
+        );
+      }
 
       setServerIndex(next);
       return prev.map((s, i) =>
@@ -96,6 +104,12 @@ export function usePlayerServers({
     );
     setPlayingIndex(null); // 👈 also clear playingIndex so it's not "Connected"
   }
+  function handleResetServers() {
+    setAllFailed(false);
+    setPlayingIndex(null);
+    setServerIndex(0);
+    setServers(initialServers);
+  }
   return {
     handleCanPlay,
     handleManualSelect,
@@ -108,5 +122,7 @@ export function usePlayerServers({
     handleMarkChecking,
     handleQualityChange,
     handleMarkQueue,
+    allFailed,
+    handleResetServers,
   };
 }

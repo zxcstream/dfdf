@@ -141,7 +141,7 @@ export default function MainControls({
       className="z-10 absolute inset-0  flex flex-col justify-between pointer-events-none bg-linear-to-t from-black/80 via-transparent to-black/50"
       onPointerMove={lockTimer}
     >
-      <div className="lg:px-6 px-2 py-3 flex justify-between items-center pointer-events-auto">
+      <div className="lg:px-4 px-2 py-3 flex justify-between items-center pointer-events-auto">
         {back && (
           <button onClick={() => router.back()} className="cursor-pointer">
             <ArrowLeftIcon className="lg:size-13 md:size-10 size-8  max-[340px]:size-5.5 text-muted-foreground" />
@@ -154,30 +154,22 @@ export default function MainControls({
           </div>
         </div> */}
         <div></div>
-        <div className="flex  lg:gap-6 gap-3 items-center ">
-          <button
-            onClick={() => setShowServer((prev) => !prev)}
-            className="text-white/80 hover:text-white cursor-pointer"
-          >
-            <ServerIcon className="lg:size-10.5 md:size-8 size-7 " />
-          </button>
-        </div>
       </div>
-      <div className="w-full lg:px-6 px-2   max-[340px]:px-1 lg:py-6 py-3  max-[340px]:py-1.5  space-y-3  max-[340px]:space-y-1  ">
+      <div className="w-full lg:px-4 px-2   max-[340px]:px-1 lg:py-6 py-3  max-[340px]:py-1.5  space-y-3  max-[340px]:space-y-1  ">
         <div className="lg:p-4 p-2  max-[340px]:p-1  pointer-events-none">
           <span className="flex lg:gap-3 gap-1.5  max-[340px]:gap-1 items-center">
             <div
               className="lg:w-1 w-0.5  lg:h-5 h-3  max-[340px]:h-2 rounded-full"
               style={{ backgroundColor: `#${color}` }}
             ></div>
-            <p className="lg:text-base text-sm  max-[340px]:text-[0.6rem] tracking-wide text-muted-foreground">
+            <p className="lg:text-lg text-sm  max-[340px]:text-[0.6rem] text-muted-foreground">
               Your'e Watching
             </p>
           </span>
-          <h1 className="lg:text-4xl text-xl  max-[340px]:text-sm font-semibold lg:mt-2 mt-1  max-[340px]:mt-0.5">
+          <h1 className="lg:text-4xl text-xl  max-[340px]:text-sm font-bold tracking-wide lg:mt-2 mt-1  max-[340px]:mt-0.5">
             {title}
           </h1>
-          <div className="flex gap-3  max-[340px]:gap-1.5  text-muted-foreground lg:mt-3 mt-1.5  max-[340px]:mt-0.5 font-medium lg:text-base text-sm  max-[340px]:text-[0.6rem]">
+          <div className="flex gap-3  max-[340px]:gap-1.5  text-muted-foreground lg:mt-3 mt-1.5  max-[340px]:mt-0.5 font-medium lg:text-lg text-sm  max-[340px]:text-[0.6rem]">
             <p>{year}</p> |<p>{genre}</p>|
             <p className="">{media_type === "tv" ? "TV Show" : "Movie"}</p>
           </div>
@@ -318,7 +310,7 @@ export default function MainControls({
                   totalSeasons={totalSeasons}
                 />
               )}
-              <button
+              {/* <button
                 className="text-white/80 hover:text-white cursor-pointer"
                 onClick={() => setCcToggle((prev) => !prev)}
               >
@@ -327,7 +319,7 @@ export default function MainControls({
                 ) : (
                   <CcOffIcon className="lg:size-13 md:size-10 size-8  max-[340px]:size-5.5" />
                 )}
-              </button>
+              </button> */}
               {/* <button className="text-white/80 hover:text-white cursor-pointer">
                 <ServerIcon className="lg:size-12 md:size-9 size-7  max-[340px]:size-5.5" />
               </button> */}

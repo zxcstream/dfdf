@@ -31,6 +31,7 @@ import DynamicTip from "./tips";
 import { useQueryClient } from "@tanstack/react-query";
 import LoadingMetadata from "./logo";
 import { ArrowLeftIcon } from "@/components/icons/arrow";
+import Link from "next/link";
 
 export default function Player() {
   // ─── URL Params ─────────────────────────────────────────────────────────────
@@ -90,6 +91,8 @@ export default function Player() {
     servers,
     setServers,
     playingIndex,
+    allFailed,
+    handleResetServers,
   } = usePlayerServers({ defaultServerIndex });
 
   const fetchServer = servers[serverIndex];
@@ -160,6 +163,7 @@ export default function Player() {
     imdbId,
     title,
     year,
+    enable: !allFailed,
   });
 
   // ─── Subtitles ───────────────────────────────────────────────────────────────
@@ -359,7 +363,25 @@ export default function Player() {
       </div>
     );
   }
-
+  if (allFailed) {
+    return (
+      <div className="relative h-screen flex flex-col justify-center items-center gap-2 bg-black">
+        {back && !state.canPlay && (
+          <button onClick={() => router.back()} className="cursor-pointer">
+            <ArrowLeftIcon className="absolute lg:top-4 top-3 lg:left-6 left-2 lg:size-13  md:size-10 size-8  max-[340px]:size-5.5 text-muted-foreground z-30" />
+          </button>
+        )}
+        <h1 className="text-2xl font-medium">All servers failed</h1>
+        <h1 className="text-muted-foreground">
+          The content may not be available yet, or the servers are currently
+          failing.
+        </h1>
+        <Button className="mt-6" onClick={handleResetServers}>
+          Try Again
+        </Button>
+      </div>
+    );
+  }
   // ─── Render ───────────────────────────────────────────────────────────────────
   return (
     <div
@@ -504,7 +526,7 @@ export default function Player() {
 
       {/* Server picker */}
       <AnimatePresence>
-        {(!state.canPlay || showServer) && (isVisible || !state.canPlay) && (
+        {(isVisible || !state.canPlay) && (
           <LyricsServerPicker
             servers={servers}
             playingIndex={playingIndex}
