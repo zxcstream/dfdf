@@ -79,10 +79,10 @@ import { validateBackendToken } from "@/lib/validate-token";
 import { isValidReferer } from "@/lib/allowed-referers";
 
 const VIXSRC_WORKERS = [
-  "https://lazarus.jerometecson33.workers.dev",
   "https://lazarus.coupdegrace21799.workers.dev",
   "https://lazarus.amenohabakiri174.workers.dev",
   "https://lazarus.jerometecsonn.workers.dev",
+  "https://lazarus.jerometecson33.workers.dev",
   // add more workers here
 ];
 

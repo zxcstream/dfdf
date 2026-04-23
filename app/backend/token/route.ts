@@ -31,8 +31,7 @@ export async function POST(req: NextRequest) {
   const origin = req.headers.get("origin") || "";
   const referer = req.headers.get("referer") || "";
 
-
-  console.log("TOKEN HIT", { connectingIp, ip, ua, origin });
+  console.log("connectingIp", { connectingIp, ip });
   if (!ALLOWED_ORIGINS.includes(origin)) {
     return NextResponse.json(
       { success: false, error: "Internal Server Error" },
