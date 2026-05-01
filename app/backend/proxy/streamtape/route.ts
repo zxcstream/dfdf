@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
     videoUrl += "&stream=1";
   }
 
-  console.log("[stream] video URL:", videoUrl);
+  // console.log("[stream] video URL:", videoUrl);
 
   // ── Step 3: Return the URL — client fetches video directly ────────────────
   // No proxying = no bandwidth cost on your server.

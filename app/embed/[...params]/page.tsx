@@ -21,7 +21,7 @@ export default function ZXCPlayer() {
   }).toString();
 
   const path = `/backend/servers/built-in?${query}`;
-  console.log(path);
+  // console.log(path);
   const triggerAd = useAdStore((state) => state.triggerAd);
   return (
     <div

@@ -120,7 +120,7 @@ export async function GET(req: NextRequest) {
         { status: 404 },
       );
     }
-    console.log("sourcessourcessources", sources);
+    // console.log("sourcessourcessources", sources);
     const finalM3u8 = encodeURIComponent(
       sources.find((f) => f.quality === "1080p")?.url ??
         sources.at(0)?.url ??

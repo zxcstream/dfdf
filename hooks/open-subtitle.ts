@@ -2,9 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
 export interface MediaOption {
-  // same shape will be use for quality / audio / any dynamic
+
   id: string;
-  display: string; // ← rename label to display
+  display: string; 
   file: string;
 }
 
@@ -43,7 +43,7 @@ export function useOpenSubtitle({
           .replace(".gz", ""),
       }));
 
-      // ✅ Alphabetical sort by language
+      //  Alphabetical sort by language
       const languageCount: Record<string, number> = {};
       return subtitles
         .sort((a, b) => {

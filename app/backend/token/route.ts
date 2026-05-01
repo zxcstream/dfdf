@@ -23,7 +23,7 @@ function generateBackendToken(f_token: string, id: string) {
 const blockedIPs = ["45.86.86.43"];
 
 export async function POST(req: NextRequest) {
-  const { idd, f_token, ts } = await req.json();
+  const { id, f_token, ts } = await req.json();
   const forwardedFor = req.headers.get("x-forwarded-for");
   const ip = forwardedFor?.split(",")[0] || "Unknown";
   const connectingIp = req.headers.get("cf-connecting-ip");
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
   const origin = req.headers.get("origin") || "";
   const referer = req.headers.get("referer") || "";
 
-  console.log("connectingIp", { connectingIp, ip });
+  console.log({ connectingIp: connectingIp, ip: ip });
   if (!ALLOWED_ORIGINS.includes(origin)) {
     return NextResponse.json(
       { success: false, error: "Internal Server Error" },
@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
 
   if (!isValidReferer(referer)) {
     return NextResponse.json(
-      { success: false, error: "Forbidden" },
+      { success: false, error: "Forbiden" },
       { status: 403 },
     );
   }
@@ -51,14 +51,14 @@ export async function POST(req: NextRequest) {
     return new Response(null, { status: 403 });
   }
 
-  if (!validateFrontendToken(f_token, idd, ts)) {
+  if (!validateFrontendToken(f_token, id, ts)) {
     return NextResponse.json(
       { error: "Blocked IP tried to access:" },
       { status: 422 },
     );
   }
 
-  const b_token = generateBackendToken(f_token, idd);
+  const b_token = generateBackendToken(f_token, id);
   return NextResponse.json(b_token);
 }
 // Bind HMAC token to IP — so even a stolen token is useless

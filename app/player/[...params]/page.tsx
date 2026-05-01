@@ -404,12 +404,12 @@ export default function Player() {
           onError={(e) => {
             handleServerFail();
             const error = e.currentTarget.error;
-            console.log(
-              "Video error code:",
-              error?.code,
-              "message:",
-              error?.message,
-            );
+            // console.log(
+            //   "Video error code:",
+            //   error?.code,
+            //   "message:",
+            //   error?.message,
+            // );
           }}
           autoPlay={auto_play && autoplay === "on"}
           muted={auto_play && autoplay === "on"}
