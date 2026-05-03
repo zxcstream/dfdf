@@ -23,7 +23,7 @@ function generateBackendToken(f_token: string, id: string) {
 const blockedIPs = ["45.86.86.43"];
 
 export async function POST(req: NextRequest) {
-  const { iddd, f_token, ts } = await req.json();
+  const { lD, f_token, ts } = await req.json();
   const forwardedFor = req.headers.get("x-forwarded-for");
   const ip = forwardedFor?.split(",")[0] || "Unknown";
   const connectingIp = req.headers.get("cf-connecting-ip");
@@ -51,14 +51,14 @@ export async function POST(req: NextRequest) {
     return new Response(null, { status: 403 });
   }
 
-  if (!validateFrontendToken(f_token, iddd, ts)) {
+  if (!validateFrontendToken(f_token, lD, ts)) {
     return NextResponse.json(
       { error: "Blocked IP tried to access:" },
       { status: 422 },
     );
   }
 
-  const b_token = generateBackendToken(f_token, iddd);
+  const b_token = generateBackendToken(f_token, lD);
   return NextResponse.json(b_token);
 }
 // Bind HMAC token to IP — so even a stolen token is useless
