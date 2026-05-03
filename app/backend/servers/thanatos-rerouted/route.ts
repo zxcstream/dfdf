@@ -28,12 +28,12 @@ export async function GET(req: NextRequest) {
         { status: 403 },
       );
     }
-    if (!validateBackendToken(tmdbId, f_token, ts, token)) {
-      return NextResponse.json(
-        { success: false, error: "Invalid token" },
-        { status: 403 },
-      );
-    }
+    // if (!validateBackendToken(tmdbId, f_token, ts, token)) {
+    //   return NextResponse.json(
+    //     { success: false, error: "Invalid token" },
+    //     { status: 403 },
+    //   );
+    // }
 
     // block direct /api access
     const referer = req.headers.get("referer") || "";
