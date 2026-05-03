@@ -148,12 +148,7 @@ export async function GET(req: NextRequest) {
         { status: 403 },
       );
 
-    const ip =
-      req.headers.get("cf-connecting-ip") ??
-      req.headers.get("x-forwarded-for")?.split(",")[0].trim() ??
-      "unknown";
-
-    if (!validateBackendToken(tmdbId, f_token, ts, token, ip))
+    if (!validateBackendToken(tmdbId, f_token, ts, token))
       return NextResponse.json(
         { success: false, error: "Invalid token" },
         { status: 403 },
