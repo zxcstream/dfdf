@@ -99,6 +99,8 @@ export function useVideoPlayer({
   const isSeekingRef = useRef(false);
   const hlsRef = useRef<Hls | null>(null);
   const hasRestoredRef = useRef(false);
+  const lastPostRef = useRef(0);
+  const lastSaveRef = useRef(0);
   const lastSavedTimeRef = useRef(0);
   //
   const playbackSpeed = useSettingsStore(
@@ -182,39 +184,86 @@ export function useVideoPlayer({
     const video = videoRef.current;
     if (!video) return;
 
+    // const onTimeUpdate = () => {
+    //   if (isSeekingRef.current) return;
+
+    //   const time = video.currentTime;
+    //   if (Math.abs(lastSavedTimeRef.current - time) < 1) return;
+
+    //   lastSavedTimeRef.current = time;
+
+    //   if (video.duration > 0) {
+    //     if (enableSaveProgress) {
+    //       // ← guard
+    //       useVideoProgressStore
+    //         .getState()
+    //         .saveProgress(progressKey, time, video.duration);
+    //     }
+
+    //     window.parent.postMessage(
+    //       {
+    //         type: "VIDEO_PROGRESS",
+    //         payload: {
+    //           progressKey,
+    //           currentTime: time,
+    //           duration: video.duration,
+    //           percent: Math.round((time / video.duration) * 100),
+    //         },
+    //       },
+    //       "*",
+    //     );
+    //   }
+
+    //   setState((p) => ({ ...p, currentTime: time, ended: video.ended }));
+    // };
     const onTimeUpdate = () => {
       if (isSeekingRef.current) return;
 
       const time = video.currentTime;
-      if (Math.abs(lastSavedTimeRef.current - time) < 0.25) return;
-
-      lastSavedTimeRef.current = time;
 
       if (video.duration > 0) {
+        const now = Date.now();
+
+        // =========================
+        // 💾 SAVE PROGRESS (every 1s)
+        // =========================
         if (enableSaveProgress) {
-          // ← guard
-          useVideoProgressStore
-            .getState()
-            .saveProgress(progressKey, time, video.duration);
+          if (now - lastSaveRef.current >= 1000) {
+            lastSaveRef.current = now;
+
+            useVideoProgressStore
+              .getState()
+              .saveProgress(progressKey, time, video.duration);
+          }
         }
 
-        window.parent.postMessage(
-          {
-            type: "VIDEO_PROGRESS",
-            payload: {
-              progressKey,
-              currentTime: time,
-              duration: video.duration,
-              percent: Math.round((time / video.duration) * 100),
+        // =========================
+        // 📡 POST MESSAGE (every 60s)
+        // =========================
+        if (now - lastPostRef.current >= 60_000) {
+          lastPostRef.current = now;
+
+          window.parent.postMessage(
+            {
+              type: "VIDEO_PROGRESS",
+              payload: {
+                progressKey,
+                currentTime: time,
+                duration: video.duration,
+                percent: Math.round((time / video.duration) * 100),
+              },
             },
-          },
-          "*",
-        );
+            "*",
+          );
+        }
       }
 
-      setState((p) => ({ ...p, currentTime: time, ended: video.ended }));
+      setState((p) => ({
+        ...p,
+        currentTime: time,
+        ended: video.ended,
+      }));
     };
-
     const onDurationChange = () =>
       setState((p) => ({ ...p, duration: video.duration || 0 }));
     const onProgress = () =>

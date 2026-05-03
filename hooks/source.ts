@@ -2,6 +2,7 @@ import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import crypto from "crypto";
 import { MediaOption } from "./open-subtitle";
+import { fetchClientIP } from "@/lib/clientIP";
 
 export interface QualityTrack {
   resolution?: number;
@@ -78,7 +79,9 @@ export default function useSource(
           year,
         });
       }
-      const { f_token, f_ts } = generateFrontendToken(String(tmdbId));
+
+      const ip = await fetchClientIP();
+      const { f_token, f_ts } = generateFrontendToken(String(tmdbId), ip);
 
       const { ts, token } = await fetchBackendToken(tmdbId, f_token, f_ts);
       const url = buildSourceURL({
@@ -165,16 +168,26 @@ function buildSourceURL({
   return `/backend/servers/${server}?${params.toString()}`;
 }
 
-export function generateFrontendToken(id: string) {
+export function generateFrontendToken(id: string, ip: string) {
   const f_ts = Date.now();
-
+  const salt = process.env.NEXT_PUBLIC_CLIENT_SALT!;
   const f_token = crypto
-    .createHash("sha256")
-    .update(`${id}:${f_ts}`)
+    .createHmac("sha256", salt)
+    .update(`${id}:${f_ts}:${ip}`)
     .digest("hex");
-
   return { f_token, f_ts };
 }
+
+// export function generateFrontendToken(id: string) {
+//   const f_ts = Date.now();
+
+//   const f_token = crypto
+//     .createHash("sha256")
+//     .update(`${id}:${f_ts}`)
+//     .digest("hex");
+
+//   return { f_token, f_ts };
+// }
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
