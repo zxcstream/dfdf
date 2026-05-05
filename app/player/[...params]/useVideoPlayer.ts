@@ -101,6 +101,7 @@ export function useVideoPlayer({
   const hasRestoredRef = useRef(false);
   const lastPostRef = useRef(0);
   const lastSaveRef = useRef(0);
+  const has90PercentFiredRef = useRef(false);
   const lastSavedTimeRef = useRef(0);
   //
   const playbackSpeed = useSettingsStore(
@@ -121,6 +122,7 @@ export function useVideoPlayer({
 
   useEffect(() => {
     hasRestoredRef.current = false;
+    has90PercentFiredRef.current = false;
   }, [playerSrc, progressKey, load]);
   useEffect(() => {
     const video = videoRef.current;
@@ -230,7 +232,6 @@ export function useVideoPlayer({
         if (enableSaveProgress) {
           if (now - lastSaveRef.current >= 1000) {
             lastSaveRef.current = now;
-
             useVideoProgressStore
               .getState()
               .saveProgress(progressKey, time, video.duration);
@@ -238,19 +239,38 @@ export function useVideoPlayer({
         }
 
         // =========================
-        // 📡 POST MESSAGE (every 60s)
+        // 📡 POST MESSAGE (only after 1 min, then every 60s)
         // =========================
-        if (now - lastPostRef.current >= 60_000) {
-          lastPostRef.current = now;
+        if (time >= 60) {
+          if (now - lastPostRef.current >= 60_000) {
+            lastPostRef.current = now;
+            window.parent.postMessage(
+              {
+                type: "VIDEO_PROGRESS",
+                payload: {
+                  progressKey,
+                  currentTime: time,
+                  duration: video.duration,
+                  percent: Math.round((time / video.duration) * 100),
+                },
+              },
+              "*",
+            );
+          }
+        }
 
+        // =========================
+        // 📡 POST MESSAGE AT 90%
+        // =========================
+        if (!has90PercentFiredRef.current && time / video.duration >= 0.9) {
+          has90PercentFiredRef.current = true;
           window.parent.postMessage(
             {
-              type: "VIDEO_PROGRESS",
+              type: "VIDEO_NINETY_PERCENT",
               payload: {
                 progressKey,
                 currentTime: time,
                 duration: video.duration,
-                percent: Math.round((time / video.duration) * 100),
               },
             },
             "*",
