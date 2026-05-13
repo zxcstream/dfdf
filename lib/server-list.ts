@@ -8,12 +8,12 @@ export const initialServers: ServerTypes[] = [
     desc: "Vast Collection",
   },
 
-  {
-    name: "Atlas V2",
-    server: "atlas_v2",
-    status: "queue",
-    desc: "Fixes Media Mismatch",
-  },
+  // {
+  //   name: "Atlas V2",
+  //   server: "atlas_v2",
+  //   status: "queue",
+  //   desc: "Fixes Media Mismatch",
+  // },
   {
     name: "Atlas II",
     server: "atlas",
