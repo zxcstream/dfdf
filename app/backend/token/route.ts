@@ -1,29 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { ALLOWED_ORIGINS, isValidReferer } from "@/lib/allowed-referers";
+import { FIELD_MAP } from "@/lib/token";
 
 const SECRET = process.env.API_SECRET!;
+const SALT = "v3";
 
-function validateFrontendToken(f_token: string, id: string, ts: number) {
+function validateFrontendToken(xt: string, id: string, rt: number) {
   const expected = crypto
-    .createHash("sha256")
-    .update(`${id}:${ts}`)
-    .digest("hex");
-  return expected === f_token && Date.now() - ts < 5000;
+    .createHash("sha512")
+    .update(`${SALT}:${rt}:${id}`) // must mirror generateFrontendToken
+    .digest("hex")
+    .slice(0, 64);
+
+  return expected === xt && Date.now() - rt < 5000;
 }
 
-function generateBackendToken(f_token: string, id: string) {
-  const ts = Date.now();
-  const token = crypto
+function generateBackendToken(xt: string, id: string) {
+  const rt = Date.now();
+  // 🔁 Rotate: include SALT in HMAC input
+  const sig = crypto
     .createHmac("sha256", SECRET)
-    .update(`${id}:${f_token}:${ts}`)
+    .update(`${SALT}:${id}:${xt}:${rt}`) // was: `${id}:${f_token}:${ts}`
     .digest("hex");
-  return { token, ts };
+
+  return { [FIELD_MAP.token]: sig, [FIELD_MAP.ts]: rt };
+  // returns: { sig: "...", rt: 1234567890 }
 }
+
 const blockedIPs = ["45.86.86.43"];
 
 export async function POST(req: NextRequest) {
-  const { zxczxc, f_token, ts } = await req.json();
+  const body = await req.json();
+  const id = body[FIELD_MAP.id]; // body.mid
+  const xt = body[FIELD_MAP.fToken]; // body.xt
+  const rt = body[FIELD_MAP.ts]; // body.rt
+
+
+
   const forwardedFor = req.headers.get("x-forwarded-for");
   const ip = forwardedFor?.split(",")[0] || "Unknown";
   const connectingIp = req.headers.get("cf-connecting-ip");
@@ -51,14 +65,13 @@ export async function POST(req: NextRequest) {
     return new Response(null, { status: 403 });
   }
 
-  if (!validateFrontendToken(f_token, zxczxc, ts)) {
+  if (!validateFrontendToken(xt, id, rt)) {
     return NextResponse.json(
       { error: "Blocked IP tried to access:" },
       { status: 422 },
     );
   }
 
-  const b_token = generateBackendToken(f_token, zxczxc);
-  return NextResponse.json(b_token);
+   return NextResponse.json(generateBackendToken(xt, id));
 }
 // Bind HMAC token to IP — so even a stolen token is useless

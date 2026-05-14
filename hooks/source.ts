@@ -2,7 +2,7 @@ import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 import crypto from "crypto";
 import { MediaOption } from "./open-subtitle";
-
+import { generateFrontendToken, FIELD_MAP } from "@/lib/token";
 export interface QualityTrack {
   resolution?: number;
   format?: string;
@@ -78,9 +78,11 @@ export default function useSource(
           year,
         });
       }
-      const { f_token, f_ts } = generateFrontendToken(String(tmdbId));
+      const { xt, rt } = generateFrontendToken(String(tmdbId));
 
-      const { ts, token } = await fetchBackendToken(tmdbId, f_token, f_ts);
+      const backendRes = await fetchBackendToken(tmdbId, xt, rt);
+      const sig = backendRes[FIELD_MAP.token]; // "sig"
+      const ts = backendRes[FIELD_MAP.ts]; // "rt"
       const url = buildSourceURL({
         server,
         tmdbId,
@@ -92,8 +94,8 @@ export default function useSource(
         year,
         // quality,
         ts,
-        token,
-        f_token,
+        sig,
+        xt,
       });
       const res = await axios.get(url);
       await sleep(1200);
@@ -102,20 +104,14 @@ export default function useSource(
   });
 }
 
-async function fetchBackendToken(
-  id: string,
-  f_token: string,
-  ts: number,
-  signal?: AbortSignal,
-) {
-  const res = await axios.post(
-    "/backend/token",
-    { zxczxc: id, f_token, ts },
-    { signal },
-  );
+async function fetchBackendToken(id: string, xt: string, rt: number) {
+  const res = await axios.post("/backend/token", {
+    [FIELD_MAP.id]: id, // "mid"
+    [FIELD_MAP.fToken]: xt, // "xt"
+    [FIELD_MAP.ts]: rt, // "rt"
+  });
   return res.data;
 }
-
 interface BuildSourceURLParams {
   server: string;
   tmdbId: string;
@@ -126,8 +122,8 @@ interface BuildSourceURLParams {
   title: string;
   year: string;
   ts: number;
-  token: string;
-  f_token: string;
+  sig: string; // was: token
+  xt: string; // was: f_token
 }
 
 function buildSourceURL({
@@ -140,40 +136,29 @@ function buildSourceURL({
   title,
   year,
   ts,
-  token,
-  f_token,
+  sig,
+  xt,
 }: BuildSourceURLParams) {
   const params = new URLSearchParams({
-    a: String(tmdbId),
+    [FIELD_MAP.id]: String(tmdbId),
     b: media_type,
-    gago: String(ts),
-    putangnamo: token,
-    f_token,
-    f: title,
-    g: year,
+    [FIELD_MAP.ts]: String(ts),
+    [FIELD_MAP.token]: sig,
+    [FIELD_MAP.fToken]: xt,
+    [FIELD_MAP.title]: title,
+    [FIELD_MAP.year]: year,
   });
 
   if (media_type === "tv") {
-    params.append("c", String(season));
-    params.append("d", String(episode));
+    params.append(FIELD_MAP.season, String(season));
+    params.append(FIELD_MAP.episode, String(episode));
   }
 
   if (imdbId) {
-    params.append("e", imdbId);
+    params.append(FIELD_MAP.imdbId, imdbId);
   }
 
   return `/backend/servers/${server}?${params.toString()}`;
-}
-
-export function generateFrontendToken(id: string) {
-  const f_ts = Date.now();
-
-  const f_token = crypto
-    .createHash("sha256")
-    .update(`${id}:${f_ts}`)
-    .digest("hex");
-
-  return { f_token, f_ts };
 }
 
 function sleep(ms: number) {

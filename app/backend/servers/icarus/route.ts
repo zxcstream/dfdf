@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { validateBackendToken } from "@/lib/validate-token";
 import { isValidReferer } from "@/lib/allowed-referers";
 import { createClient } from "@supabase/supabase-js";
+import { FIELD_MAP } from "@/lib/token";
 
 const supabase = createClient(
   process.env.SUPABASE_URL_MOVIEBOX!,
@@ -76,15 +77,15 @@ export async function getWorkingProxy(url: string, proxies: string[]) {
 
 export async function GET(req: NextRequest) {
   try {
-    const tmdbId = req.nextUrl.searchParams.get("a");
-    const mediaType = req.nextUrl.searchParams.get("b");
-    const season = req.nextUrl.searchParams.get("c");
-    const episode = req.nextUrl.searchParams.get("d");
-    const title = req.nextUrl.searchParams.get("f");
-    const year = req.nextUrl.searchParams.get("g");
-    const ts = Number(req.nextUrl.searchParams.get("gago"));
-    const token = req.nextUrl.searchParams.get("putangnamo")!;
-    const f_token = req.nextUrl.searchParams.get("f_token")!;
+    const tmdbId = req.nextUrl.searchParams.get(FIELD_MAP.id); // "mid"
+    const mediaType = req.nextUrl.searchParams.get("b"); // rotate this too if you want
+    const season = req.nextUrl.searchParams.get(FIELD_MAP.season); // "sx"
+    const episode = req.nextUrl.searchParams.get(FIELD_MAP.episode); // "ex"
+    const title = req.nextUrl.searchParams.get(FIELD_MAP.title); // "q"
+    const year = req.nextUrl.searchParams.get(FIELD_MAP.year); // "p"
+    const ts = Number(req.nextUrl.searchParams.get(FIELD_MAP.ts)); // "rt"
+    const token = req.nextUrl.searchParams.get(FIELD_MAP.token)!; // "sig"
+    const f_token = req.nextUrl.searchParams.get(FIELD_MAP.fToken)!; // "xt"
 
     if (!tmdbId || !mediaType || !title || !year || !ts || !token) {
       return NextResponse.json(
